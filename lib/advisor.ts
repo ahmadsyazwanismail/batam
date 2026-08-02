@@ -9,7 +9,7 @@ import {
   type Place,
 } from '@/data/trip';
 import { distanceVerdict, haversineKm, type LatLon, type Verdict } from './geo';
-import { isOpenAt, wibDate, wibMinutes } from './time';
+import { formatMinutes, isOpenAt, wibDate, wibMinutes } from './time';
 
 /**
  * "What should we do now?"
@@ -260,8 +260,5 @@ function noneReason(minutes: MinutesOfDay, isLastDay: boolean): string {
   return 'Everything nearby is ticked off. Try another day, or the map.';
 }
 
-function formatClock(minutes: MinutesOfDay): string {
-  return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(
-    minutes % 60,
-  ).padStart(2, '0')}`;
-}
+/** One clock format for the whole app — see lib/time.ts. */
+const formatClock = formatMinutes;

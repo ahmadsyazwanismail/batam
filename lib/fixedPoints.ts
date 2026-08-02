@@ -55,11 +55,12 @@ export function fixedPoints(day: DayId): readonly FixedPoint[] {
   for (const leg of FERRY.legs) {
     if (leg.date !== date) continue;
 
-    const departsAt =
-      leg.departsZone === 'MYT' ? mytToWib(parseHhmm(leg.departs)) : parseHhmm(leg.departs);
+    const departs = parseHhmm(leg.departs);
     timed.push({
-      at: departsAt,
-      clock: `${leg.departs} ${leg.departsZone}`,
+      at: leg.departsZone === 'MYT' ? mytToWib(departs) : departs,
+      // Shown in its own zone — the booking says nine o'clock Malaysian time,
+      // and rewriting that into WIB is how people miss boats.
+      clock: `${formatMinutes(departs)} ${leg.departsZone}`,
       label: `Ferry leaves ${leg.from.split(',')[0]}`,
       detail: FERRY.operator,
     });
@@ -67,7 +68,7 @@ export function fixedPoints(day: DayId): readonly FixedPoint[] {
     if (leg.arrives !== undefined) {
       timed.push({
         at: parseHhmm(leg.arrives),
-        clock: `${leg.arrives} ${leg.arrivesZone ?? 'WIB'}`,
+        clock: `${formatMinutes(parseHhmm(leg.arrives))} ${leg.arrivesZone ?? 'WIB'}`,
         label: `Lands at ${leg.to.split(',')[0]}`,
         detail: 'camera collected here on arrival',
       });

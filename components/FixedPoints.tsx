@@ -23,10 +23,10 @@ export function FixedPoints({ day }: { day: DayId }): JSX.Element | null {
           <li
             key={point.label}
             className={`flex items-baseline gap-3 p-3 ${
-              i > 0 ? 'border-t border-hairline border-rule' : ''
+              i > 0 ? 'border-t-hairline border-rule' : ''
             }`}
           >
-            <span className="numeric w-[74px] shrink-0 text-eyebrow font-bold uppercase text-muted">
+            <span className="numeric w-[104px] shrink-0 text-eyebrow font-bold uppercase text-muted">
               {point.clock ?? <span aria-hidden>—</span>}
             </span>
             <span className="min-w-0 flex-1">

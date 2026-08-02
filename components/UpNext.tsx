@@ -34,7 +34,7 @@ export function UpNext({ now, from }: { now: Date; from: LatLon }): JSX.Element 
           <motion.li
             key={`${row.kind}-${row.label}`}
             variants={stationVariants}
-            className="flex items-baseline gap-3 border-b border-hairline border-rule px-gutter py-3 last:border-b-0"
+            className="flex items-baseline gap-3 border-b-hairline border-rule px-gutter py-3 last:border-b-0"
           >
             <span
               className="numeric w-[3.4rem] shrink-0 text-lede font-bold tabular-nums"

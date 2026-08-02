@@ -7,6 +7,7 @@ import {
   emptyAnimation,
   splashAnimation,
 } from '@/data/lottie';
+import { MEALS } from '@/lib/meals';
 import { usePrefersReducedMotion } from '@/lib/motion';
 
 // lottie-web is ~250 kB and exists for three decorative moments, so it is
@@ -18,11 +19,17 @@ const LottiePlayer = dynamic(() => import('./LottiePlayer'), {
 
 export type Moment = 'splash' | 'empty' | 'celebrate';
 
-const BUILDERS: Record<Moment, (colour: string) => Record<string, unknown>> = {
+const BUILDERS: Record<
+  Moment,
+  (colour: string, palette: readonly string[]) => Record<string, unknown>
+> = {
   splash: splashAnimation,
   empty: emptyAnimation,
   celebrate: celebrateAnimation,
 };
+
+/** The four courses, in the order a day serves them. */
+const MEAL_COLOURS = MEALS.map((m) => m.colour);
 
 /**
  * Decoration only, and only in the three places the brief allows.
@@ -45,16 +52,16 @@ export function LottieMoment({
 
   useEffect(() => {
     const value = getComputedStyle(document.documentElement)
-      .getPropertyValue('--line')
+      .getPropertyValue('--accent')
       .trim();
-    setColour(value || '#D93F3F');
+    setColour(value || '#C2410C');
   }, []);
 
   if (!colour) return null;
 
   return (
     <LottiePlayer
-      animationData={BUILDERS[name](colour)}
+      animationData={BUILDERS[name](colour, MEAL_COLOURS)}
       loop={reduced ? false : loop}
       autoplay={!reduced}
       onComplete={onComplete}

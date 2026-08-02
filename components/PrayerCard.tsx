@@ -28,7 +28,7 @@ export function PrayerCard({ now, from }: { now: Date; from: LatLon }): JSX.Elem
       aria-labelledby="prayer-heading"
       className="overflow-hidden rounded-md border border-hairline border-rule bg-card"
     >
-      <div className="flex items-baseline justify-between gap-3 border-b border-hairline border-rule px-4 py-3">
+      <div className="flex items-baseline justify-between gap-3 border-b-hairline border-rule px-4 py-3">
         <h2 id="prayer-heading" className="eyebrow">
           Waktu solat · WIB
         </h2>

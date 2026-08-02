@@ -2,23 +2,32 @@
 
 import type { Station } from '@/lib/route';
 import { dayById, type DayId } from '@/data/trip';
-import { directionsUrl, formatKm } from '@/lib/geo';
+import { directionsUrl, distanceVerdict, formatKm, haversineKm, type LatLon } from '@/lib/geo';
+import { dayMenu } from '@/lib/meals';
 import { useTrip } from '@/lib/store';
 import { Sheet } from './Sheet';
 import { PlaceField } from './PlaceField';
 import { CATEGORY_LABEL, CategoryIcon } from './CategoryIcon';
 
 /**
- * What one station is, and the two things you actually want to do with it:
+ * What one place is, and the two things you actually want to do with it:
  * get directions, and tick it off.
+ *
+ * The table used to read Line / Stop / From last stop / Coordinates, which was
+ * the strip map's vocabulary and outlived it. A stop number means nothing once
+ * the day is a menu, and a raw lat/lon is developer output sitting directly
+ * above the button that actually takes you there.
  */
 export function PlaceSheet({
   station,
   line,
+  from,
   onClose,
 }: {
   station: Station | null;
   line: DayId;
+  /** Where "how far" is measured from. Omitted, the row is left out. */
+  from?: LatLon;
   onClose: () => void;
 }): JSX.Element {
   const done = useTrip((s) => s.done);
@@ -27,6 +36,9 @@ export function PlaceSheet({
   const place = station?.place;
   const isDone = place ? done.includes(place.key) : false;
   const { name: lineName } = dayById(line);
+  const course = place
+    ? dayMenu(line).courses.find((c) => c.places.some((p) => p.place.key === place.key))
+    : undefined;
 
   return (
     <Sheet open={station !== null} onClose={onClose} title={place?.name ?? 'Station'}>
@@ -39,7 +51,6 @@ export function PlaceSheet({
                   <CategoryIcon category={place.category} size={14} />
                 </span>
                 {CATEGORY_LABEL[place.category]}
-                {station.interchange && ' · Interchange'}
               </p>
               <h3 className="mt-1.5 text-[1.75rem] font-bold leading-[1.1] tracking-[-0.03em]">
                 {place.name}
@@ -52,31 +63,34 @@ export function PlaceSheet({
 
           <p className="mt-2 text-muted">{place.note}</p>
 
-          <dl className="mt-5 border-t border-hairline border-rule">
-            <Row label="Line">
-              {line} · {lineName}
+          <dl className="mt-5 [&>div:last-child]:border-b-0">
+            <Row label="Day">
+              Day {line} · {lineName}
             </Row>
-            <Row label="Stop">
-              {station.index}
-              {station.connection ? ` · ${station.connection}` : ''}
-            </Row>
-            {station.fixedTime && <Row label="Hours">{station.fixedTime.label}</Row>}
-            {station.fromPreviousKm !== null && (
-              <Row label="From last stop">{formatKm(station.fromPreviousKm)}</Row>
+            {course && (
+              <Row label="Course">
+                <span style={{ color: course.meal.textColour }}>{course.meal.name}</span>
+              </Row>
             )}
-            <Row label="Coordinates">
-              {place.lat.toFixed(5)}, {place.lon.toFixed(5)}
-            </Row>
+            {station.fixedTime && <Row label="Open">{station.fixedTime.label}</Row>}
+            {from && (
+              <Row label="How far">
+                {formatKm(haversineKm(from, place))}
+                <span className="mt-0.5 block text-caption font-normal text-muted">
+                  {distanceVerdict(haversineKm(from, place)).text}
+                </span>
+              </Row>
+            )}
           </dl>
 
           {place.tenants && place.tenants.length > 0 && (
             <>
               <p className="eyebrow mt-6">Inside</p>
-              <ul className="mt-1.5 border-t border-hairline border-rule">
+              <ul className="mt-1.5 border-t-hairline border-rule">
                 {place.tenants.map((tenant) => (
                   <li
                     key={tenant.name}
-                    className="flex items-baseline justify-between gap-4 border-b border-hairline border-rule py-2.5"
+                    className="flex items-baseline justify-between gap-4 border-b-hairline border-rule py-2.5"
                   >
                     <span className="tracking-[-0.01em]">{tenant.name}</span>
                     <span className="shrink-0 text-caption text-muted">
@@ -125,9 +139,14 @@ function Row({
   children: React.ReactNode;
 }): JSX.Element {
   return (
-    <div className="flex items-baseline justify-between gap-4 border-b border-hairline border-rule py-2.5">
+    // Two columns rather than label-left/value-right. Pushing values to the
+    // right edge is what made this look cramped: "Day 4 · Northern loop" and
+    // "Makan tengahari" both ran the full width and finished hard against the
+    // margin. On a fixed left column they start in the same place and wrap
+    // into space instead of fighting for it.
+    <div className="grid grid-cols-[6.5rem_1fr] items-baseline gap-x-4 border-b-hairline border-rule py-3">
       <dt className="eyebrow">{label}</dt>
-      <dd className="numeric shrink-0 text-right font-semibold tracking-[-0.01em]">
+      <dd className="numeric min-w-0 font-semibold leading-snug tracking-[-0.01em]">
         {children}
       </dd>
     </div>

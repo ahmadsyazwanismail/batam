@@ -105,7 +105,7 @@ export function PlacesScreen(): JSX.Element {
       </div>
 
       {/* Sticky, so the filters stay reachable however far the list runs. */}
-      <div className="sticky top-0 z-30 border-b border-hairline border-rule bg-paper/95 px-gutter pb-2.5 pt-2.5 backdrop-blur-sm">
+      <div className="sticky top-0 z-30 border-b-hairline border-rule bg-paper/95 px-gutter pb-2.5 pt-2.5 backdrop-blur-sm">
         <label className="sr-only" htmlFor="place-search">
           Search places
         </label>
@@ -180,6 +180,7 @@ export function PlacesScreen(): JSX.Element {
       <PlaceSheet
         station={openStation?.station ?? null}
         line={openStation?.line ?? 1}
+        from={location.origin.point}
         onClose={() => setOpenKey(null)}
       />
     </Screen>

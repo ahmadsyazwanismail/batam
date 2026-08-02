@@ -11,7 +11,7 @@ import {
   type Place,
 } from '@/data/trip';
 import { haversineKm } from './geo';
-import { formatMinutes } from './time';
+import { formatMinutes, parseHhmm } from './time';
 
 /**
  * The running order for a day, as a strip map reads it.
@@ -23,7 +23,7 @@ import { formatMinutes } from './time';
  */
 
 export interface FixedTime {
-  /** "Lands 10:00", "From 12:30", "Bags 15:30–16:30". */
+  /** "Lands 10:00 am", "From 12:30 pm", "Bags 3:30 pm–4:30 pm". */
   readonly label: string;
   /** For ordering. The moment the constraint starts to bite. */
   readonly minutes: MinutesOfDay;
@@ -97,7 +97,7 @@ function fixedTimeFor(place: Place, lineId: DayId): FixedTime | undefined {
     const arriving = FERRY.legs.find((l) => l.date === line.date && l.arrives);
     if (arriving?.arrives) {
       return {
-        label: `Lands ${arriving.arrives}`,
+        label: `Lands ${formatMinutes(parseHhmm(arriving.arrives))}`,
         minutes: Number(arriving.arrives.slice(0, 2)) * 60,
       };
     }
@@ -106,7 +106,7 @@ function fixedTimeFor(place: Place, lineId: DayId): FixedTime | undefined {
       return {
         label: `Bags ${formatMinutes(FERRY.checkIn.opens)}–${formatMinutes(
           FERRY.checkIn.closes ?? FERRY.checkIn.opens,
-        )} · sails ${leaving.departs}`,
+        )} · sails ${formatMinutes(parseHhmm(leaving.departs))}`,
         minutes: FERRY.checkIn.opens,
       };
     }

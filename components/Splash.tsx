@@ -54,11 +54,11 @@ export function Splash(): JSX.Element | null {
           onPointerDown={dismiss}
           aria-hidden
         >
-          <div className="w-36">
+          <div className="w-40">
             <LottieMoment name="splash" loop={false} />
           </div>
           <Logo size={40} className="mt-1" />
-          <p className="eyebrow mt-3 text-muted">21–25 Aug 2026 · 5 lines</p>
+          <p className="eyebrow mt-3 text-muted">21–25 Aug 2026 · five days</p>
         </motion.div>
       )}
     </AnimatePresence>

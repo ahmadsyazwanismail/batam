@@ -16,9 +16,9 @@ describe('fixedPoints', () => {
   it('reads the sailing out in its own timezone but orders it in WIB', () => {
     const [departs, lands] = fixedPoints(1);
     // 09:00 in Malaysia is 08:00 in Batam, so it must sort before the 10:00 landing.
-    expect(departs!.clock).toBe('09:00 MYT');
+    expect(departs!.clock).toBe('9:00 am MYT');
     expect(departs!.at).toBe(8 * 60);
-    expect(lands!.clock).toBe('10:00 WIB');
+    expect(lands!.clock).toBe('10:00 am WIB');
     expect(departs!.at!).toBeLessThan(lands!.at!);
   });
 
@@ -42,8 +42,8 @@ describe('fixedPoints', () => {
       'Bag drop for the ferry home',
       'Ferry leaves Harbour Bay',
     ]);
-    expect(points[1]!.clock).toBe('15:30–16:30');
-    expect(points[2]!.clock).toBe('17:00 WIB');
+    expect(points[1]!.clock).toBe('3:30 pm–4:30 pm');
+    expect(points[2]!.clock).toBe('5:00 pm WIB');
   });
 
   it('never invents a time that was not booked', () => {

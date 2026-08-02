@@ -750,7 +750,7 @@ export const WARNINGS: readonly Warning[] = [
   {
     key: 'timezone',
     title: 'Batam is one hour behind Malaysia',
-    body: 'Every time in this app is WIB. The ferry out leaves Puteri Harbour at 09:00 MYT and lands at 10:00 WIB — an hour on the water, not two.',
+    body: 'Every time in this app is WIB. The ferry out leaves Puteri Harbour at 9:00 am MYT and lands at 10:00 am WIB — an hour on the water, not two.',
   },
   {
     key: 'infant-fare',

@@ -57,7 +57,7 @@ describe('the day starts where the day actually starts', () => {
     const first = runningOrder(1)[0]!;
     expect(first.place.key).toBe('ferry');
     expect(first.connection).toBe('Ferry in');
-    expect(first.fixedTime?.label).toBe('Lands 10:00');
+    expect(first.fixedTime?.label).toBe('Lands 10:00 am');
   });
 
   it('drives down to Harris by way of Barelang on day one', () => {
@@ -113,7 +113,7 @@ describe('the day starts where the day actually starts', () => {
     const last = stations[stations.length - 1]!;
     expect(last.place.key).toBe('ferry');
     expect(last.connection).toBe('Ferry home');
-    expect(last.fixedTime?.label).toBe('Bags 15:30–16:30 · sails 17:00');
+    expect(last.fixedTime?.label).toBe('Bags 3:30 pm–4:30 pm · sails 5:00 pm');
   });
 
   it('starts every other day at that day’s hotel', () => {
@@ -150,18 +150,18 @@ describe('opening times constrain the order', () => {
 
   it('carries the real opening hours and nothing else', () => {
     const byKey = new Map(runningOrder(4).map((s) => [s.place.key, s]));
-    expect(byKey.get('dinogate')?.fixedTime?.label).toBe('09:00–18:00');
-    expect(byKey.get('eska')?.fixedTime?.label).toBe('10:00–22:00');
+    expect(byKey.get('dinogate')?.fixedTime?.label).toBe('9:00 am–6:00 pm');
+    expect(byKey.get('eska')?.fixedTime?.label).toBe('10:00 am–10:00 pm');
     // Pink Beach came with an opening time and no closing time, so it says so.
-    expect(byKey.get('pinkbeach')?.fixedTime?.label).toBe('From 12:30');
+    expect(byKey.get('pinkbeach')?.fixedTime?.label).toBe('From 12:30 pm');
     // Everything else has no published hours, and so gets no time at all.
     expect(byKey.get('gbm')?.fixedTime).toBeUndefined();
     expect(byKey.get('amanda')?.fixedTime).toBeUndefined();
   });
 
-  it('opens Morning Bakery from 06:00 on the last day', () => {
+  it('opens Morning Bakery from 6 am on the last day', () => {
     const bakery = runningOrder(5).find((s) => s.place.key === 'mornbakery');
-    expect(bakery?.fixedTime?.label).toBe('From 06:00');
+    expect(bakery?.fixedTime?.label).toBe('From 6:00 am');
   });
 });
 

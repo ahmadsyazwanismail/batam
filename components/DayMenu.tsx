@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { dayMenu, type Course } from '@/lib/meals';
 import { directionsUrl, formatKm, haversineKm, type LatLon } from '@/lib/geo';
 import { runningOrder } from '@/lib/route';
+import { formatMinutes } from '@/lib/time';
 import { useHydrated, useTrip } from '@/lib/store';
 import { listVariants, stationVariants, usePrefersReducedMotion } from '@/lib/motion';
 import { CategoryIcon } from './CategoryIcon';
@@ -107,7 +108,12 @@ export function DayMenu({
         )}
       </motion.div>
 
-      <PlaceSheet station={openStation} line={day} onClose={() => setOpenKey(null)} />
+      <PlaceSheet
+        station={openStation}
+        line={day}
+        from={from}
+        onClose={() => setOpenKey(null)}
+      />
     </>
   );
 }
@@ -132,8 +138,7 @@ function CourseBlock({
           {meal.name}
         </h2>
         <span className="numeric text-eyebrow font-bold uppercase text-muted">
-          {String(Math.floor(meal.from / 60)).padStart(2, '0')}:
-          {String(meal.from % 60).padStart(2, '0')}
+          {formatMinutes(meal.from)}
         </span>
       </div>
 
@@ -182,7 +187,7 @@ function CourseBlock({
                   href={directionsUrl(place)}
                   target="_blank"
                   rel="noreferrer"
-                  className="btn w-full border-t border-hairline border-rule py-2.5 text-caption"
+                  className="btn w-full border-t-hairline border-rule py-2.5 text-caption"
                   style={{ color: meal.textColour }}
                 >
                   Open in Google Maps

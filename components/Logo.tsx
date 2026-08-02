@@ -1,14 +1,14 @@
 /**
  * The mark.
  *
- * An interchange, reduced: an ink roundel with a paper spine running through
- * it and a single station on the line. It is the strip map at 16 pixels, which
- * is the only test a mark like this has to pass — it has to survive a browser
- * tab and a home screen, and it has to still mean something there.
+ * A bowl, seen from the side: rim, body, and a mound of something in it. The
+ * previous mark was an interchange roundel with a line running through it,
+ * which stopped being true the moment the app stopped being about lines.
  *
- * Three colours, four shapes, no gradients and no strokes under a pixel. The
- * station dot is the only place the line colour appears, so the mark changes
- * with the day exactly like everything else does.
+ * Four shapes, three colours, no strokes and no gradients — because the only
+ * test a mark like this has to pass is a browser tab and a home screen, and it
+ * has to still mean something at sixteen pixels. The ink disc is not
+ * decoration: without it the mark disappears against a dark tab strip.
  */
 export function LogoMark({
   size = 32,
@@ -28,18 +28,18 @@ export function LogoMark({
       role="img"
       aria-label="Batam"
     >
-      <circle cx="32" cy="32" r="32" fill="var(--ink, #16181C)" />
-      {/* The spine, drawn as a capsule so it reads as a line rather than a bar. */}
-      <rect x="26" y="8" width="12" height="48" rx="6" fill="var(--paper, #F4F3EE)" />
-      <circle cx="32" cy="32" r="9" fill="var(--ink, #16181C)" />
-      <circle cx="32" cy="32" r="5.5" fill={colour} />
+      <circle cx="32" cy="32" r="32" fill="var(--ink, #2A1A10)" />
+      {/* What is in it, nested into the rim rather than floating above it. */}
+      <path d="M20 30.5a12 12 0 0 1 24 0z" fill={colour} />
+      <rect x="9" y="30" width="46" height="6.5" rx="3.25" fill="var(--paper, #FBF3E6)" />
+      <path d="M15 37.5h34a17 17 0 0 1-34 0z" fill="var(--paper, #FBF3E6)" />
     </svg>
   );
 }
 
 /**
  * Mark plus wordmark. Uppercase, widely tracked, weighted to sit optically
- * level with the roundel rather than mathematically level with it.
+ * level with the disc rather than mathematically level with it.
  */
 export function Logo({
   size = 28,

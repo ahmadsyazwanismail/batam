@@ -79,7 +79,7 @@ describe('the last day', () => {
     const advice = ask({ now: at('2026-08-25', '15:00') });
     expect(advice.place).toBeNull();
     expect(advice.reason).toMatch(/Harbour Bay/);
-    expect(advice.reason).toMatch(/16:30/);
+    expect(advice.reason).toMatch(/4:30 pm/);
   });
 
   it('never suggests anything that cannot be finished by 15:00', () => {

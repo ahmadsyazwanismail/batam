@@ -26,10 +26,19 @@ export function wibMinutes(now: Date = new Date()): MinutesOfDay {
   return d.getUTCHours() * 60 + d.getUTCMinutes();
 }
 
-/** "14:05" */
+/**
+ * "2:05 pm" — every clock in the app, in one place.
+ *
+ * Minutes are always two digits so a column of times still lines up; the hour
+ * is not padded, because "09:00 am" is not how anyone writes it.
+ */
 export function formatMinutes(minutes: MinutesOfDay): string {
   const m = ((minutes % 1440) + 1440) % 1440;
-  return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+  const hours = Math.floor(m / 60);
+  const suffix = hours < 12 ? 'am' : 'pm';
+  // Midnight and noon are 12, not 0.
+  const hour12 = hours % 12 === 0 ? 12 : hours % 12;
+  return `${hour12}:${String(m % 60).padStart(2, '0')} ${suffix}`;
 }
 
 export function wibClock(now: Date = new Date()): string {

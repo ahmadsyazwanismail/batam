@@ -34,7 +34,7 @@ export function Advisor({ now, from }: { now: Date; from: LatLon }): JSX.Element
       aria-labelledby="advisor-heading"
       className="overflow-hidden rounded-md border border-hairline border-rule bg-card"
     >
-      <div className="flex items-start justify-between gap-3 border-b border-hairline border-rule px-4 py-3">
+      <div className="flex items-start justify-between gap-3 border-b-hairline border-rule px-4 py-3">
         <h2 id="advisor-heading" className="eyebrow">
           What should we do now?
         </h2>

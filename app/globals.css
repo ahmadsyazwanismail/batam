@@ -97,11 +97,11 @@
   }
 
   .rule-t {
-    @apply border-t border-hairline border-rule;
+    @apply border-t-hairline border-rule;
   }
 
   .rule-b {
-    @apply border-b border-hairline border-rule;
+    @apply border-b-hairline border-rule;
   }
 
   /* Tap targets are never smaller than this, anywhere. */

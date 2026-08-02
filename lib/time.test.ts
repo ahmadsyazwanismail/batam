@@ -18,39 +18,45 @@ const midTrip = new Date('2026-08-23T06:30:00Z');
 
 describe('WIB clock', () => {
   it('reads UTC+7', () => {
-    expect(wibClock(midTrip)).toBe('13:30');
+    expect(wibClock(midTrip)).toBe('1:30 pm');
     expect(wibMinutes(midTrip)).toBe(13 * 60 + 30);
     expect(wibDate(midTrip)).toBe('2026-08-23');
   });
 
   it('keeps Malaysia an hour ahead', () => {
-    expect(mytClock(midTrip)).toBe('14:30');
+    expect(mytClock(midTrip)).toBe('2:30 pm');
   });
 
   it('rolls the date over at WIB midnight, not UTC midnight', () => {
     // 17:10 UTC on the 22nd is already 00:10 on the 23rd in Batam.
     expect(wibDate(new Date('2026-08-22T17:10:00Z'))).toBe('2026-08-23');
-    expect(wibClock(new Date('2026-08-22T17:10:00Z'))).toBe('00:10');
+    expect(wibClock(new Date('2026-08-22T17:10:00Z'))).toBe('12:10 am');
   });
 
   it('does not read the device timezone', () => {
     // Same instant, and the answer must not depend on where the phone thinks
     // it is — this is the single most common source of confusion on this trip.
     const instant = new Date('2026-08-25T09:00:00Z');
-    expect(wibClock(instant)).toBe('16:00');
+    expect(wibClock(instant)).toBe('4:00 pm');
   });
 });
 
 describe('formatMinutes', () => {
-  it('pads to a signage clock', () => {
-    expect(formatMinutes(0)).toBe('00:00');
-    expect(formatMinutes(9 * 60)).toBe('09:00');
-    expect(formatMinutes(12 * 60 + 30)).toBe('12:30');
-    expect(formatMinutes(23 * 60 + 59)).toBe('23:59');
+  it('reads as a twelve-hour clock', () => {
+    expect(formatMinutes(9 * 60)).toBe('9:00 am');
+    expect(formatMinutes(12 * 60 + 30)).toBe('12:30 pm');
+    expect(formatMinutes(15 * 60 + 5)).toBe('3:05 pm');
+    expect(formatMinutes(23 * 60 + 59)).toBe('11:59 pm');
   });
 
-  it('round-trips with parseHhmm', () => {
-    expect(formatMinutes(parseHhmm('15:30'))).toBe('15:30');
+  it('calls midnight and noon twelve, not zero', () => {
+    expect(formatMinutes(0)).toBe('12:00 am');
+    expect(formatMinutes(12 * 60)).toBe('12:00 pm');
+  });
+
+  it('pads the minutes but never the hour', () => {
+    expect(formatMinutes(6 * 60 + 5)).toBe('6:05 am');
+    expect(formatMinutes(parseHhmm('15:30'))).toBe('3:30 pm');
     expect(parseHhmm('06:00')).toBe(360);
   });
 });

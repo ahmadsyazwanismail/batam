@@ -2,10 +2,10 @@
  * The three Lottie moments, authored here rather than fetched.
  *
  * The brief allows Lottie in exactly three places — the first-load splash, the
- * empty state, and the celebration when a day's last station is ticked off —
- * and nowhere in the interface. Nothing here is downloaded: the app has to work
+ * empty state, and the celebration when a day's last stop is ticked off — and
+ * nowhere in the interface. Nothing here is downloaded: the app has to work
  * with no signal, so the animation data is built in TypeScript and bundled,
- * which also means it can be tinted with whichever line is running today.
+ * which also means it can carry the app's own colours.
  */
 
 type Vec = number[];
@@ -88,58 +88,20 @@ function circle(diameter: number, colour: string): unknown[] {
   ];
 }
 
-/** A vertical bar that draws itself downwards via a trim path. */
-function spine(height: number, width: number, colour: string, to: number): unknown[] {
-  return [
-    {
-      ty: 'gr',
-      nm: 'spine',
-      it: [
-        {
-          ty: 'rc',
-          d: 1,
-          s: still([width, height]),
-          p: still([0, 0]),
-          r: still([0]),
-        },
-        { ty: 'fl', c: still(rgba(colour)), o: still([100]), r: 1 },
-        {
-          ty: 'tm',
-          s: still([0]),
-          e: animated([
-            { t: 0, s: [0] },
-            { t: to, s: [100] },
-          ]),
-          o: still([0]),
-          m: 1,
-        },
-        {
-          ty: 'tr',
-          p: still([0, 0]),
-          a: still([0, 0]),
-          s: still([100, 100]),
-          r: still([0]),
-          o: still([100]),
-          sk: still([0]),
-          sa: still([0]),
-        },
-      ],
-    },
-  ];
-}
-
 function composition(
   name: string,
   frames: number,
   layers: Record<string, unknown>[],
+  width = 200,
+  height = 200,
 ): Record<string, unknown> {
   return {
     v: '5.7.4',
     fr: 30,
     ip: 0,
     op: frames,
-    w: 200,
-    h: 200,
+    w: width,
+    h: height,
     nm: name,
     ddd: 0,
     assets: [],
@@ -155,50 +117,48 @@ const pop = (at: number) =>
   ]);
 
 /**
- * First load: a line drawing itself, three stations arriving on it. The app's
- * whole idea in one gesture.
+ * First load: four courses arriving in order, in their own colours.
+ *
+ * This used to be a line drawing itself with three stations landing on it,
+ * which was the app's idea until the app stopped being about lines. The dots
+ * are deliberately not joined up — a connector would put the railway back.
+ *
+ * `palette` is the four meal colours, in the order they happen in a day.
  */
-export function splashAnimation(colour: string): Record<string, unknown> {
-  return composition('splash', 70, [
-    layer({
-      name: 'stop-3',
-      index: 1,
-      position: [100, 155],
-      shapes: circle(26, colour),
-      scale: pop(34),
-      from: 0,
-      to: 70,
-    }),
-    layer({
-      name: 'stop-2',
-      index: 2,
-      position: [100, 100],
-      shapes: circle(26, colour),
-      scale: pop(24),
-      from: 0,
-      to: 70,
-    }),
-    layer({
-      name: 'stop-1',
-      index: 3,
-      position: [100, 45],
-      shapes: circle(26, colour),
-      scale: pop(14),
-      from: 0,
-      to: 70,
-    }),
-    layer({
-      name: 'spine',
-      index: 4,
-      position: [100, 100],
-      shapes: spine(120, 9, colour, 22),
-      from: 0,
-      to: 70,
-    }),
-  ]);
+export function splashAnimation(
+  colour: string,
+  palette: readonly string[] = [],
+): Record<string, unknown> {
+  const colours = palette.length > 0 ? palette : [colour, colour, colour, colour];
+  const gap = 46;
+  const first = 100 - (gap * (colours.length - 1)) / 2;
+  // The splash is gone at 1.5 s, so the last course has to have landed and
+  // settled well before then — six frames apart at 30 fps puts the fourth pop
+  // at 0.6 s and its settle at 1.0 s.
+  const frames = 40;
+
+  return composition(
+    'splash',
+    frames,
+    colours.map((c, i) =>
+      layer({
+        name: `course-${i + 1}`,
+        index: i + 1,
+        position: [first + i * gap, 44],
+        shapes: circle(34, c ?? colour),
+        scale: pop(i * 6),
+        from: 0,
+        to: frames,
+      }),
+    ),
+    // A band, not a square — four dots in a row leave most of a 200×200
+    // canvas empty, which reads on screen as a gap under the animation.
+    200,
+    88,
+  );
 }
 
-/** Nothing matched: one station, alone, breathing. */
+/** Nothing matched: one dot, alone, breathing. */
 export function emptyAnimation(colour: string): Record<string, unknown> {
   return composition('empty', 90, [
     layer({
@@ -230,7 +190,7 @@ export function emptyAnimation(colour: string): Record<string, unknown> {
   ]);
 }
 
-/** The last station of a day, ticked. Six dots leaving the platform. */
+/** The last stop of a day, ticked. Six dots going off like a small firework. */
 export function celebrateAnimation(colour: string): Record<string, unknown> {
   const rays = [0, 60, 120, 180, 240, 300].map((degrees, i) => {
     const radians = (degrees * Math.PI) / 180;

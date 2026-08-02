@@ -62,7 +62,7 @@ export function MapScreen(): JSX.Element {
         <h1 className="mt-1 text-[2rem] font-bold tracking-[-0.035em]">Map</h1>
       </header>
 
-      <div className="border-b border-hairline border-rule px-gutter pb-2.5">
+      <div className="border-b-hairline border-rule px-gutter pb-2.5">
         <FilterChips
           lines={lines}
           categories={categories}
@@ -108,13 +108,14 @@ export function MapScreen(): JSX.Element {
         )}
       </main>
 
-      <div className="shrink-0 border-t border-hairline border-rule px-gutter pb-[calc(theme(spacing.tabbar)+env(safe-area-inset-bottom))] pt-2.5">
+      <div className="shrink-0 border-t-hairline border-rule px-gutter pb-[calc(theme(spacing.tabbar)+env(safe-area-inset-bottom))] pt-2.5">
         <LocationBar location={location} compact />
       </div>
 
       <PlaceSheet
         station={openStation?.station ?? null}
         line={openStation?.line ?? 1}
+        from={location.origin.point}
         onClose={() => setOpenKey(null)}
       />
     </div>
