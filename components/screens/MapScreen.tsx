@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { FilterChips } from '@/components/FilterChips';
 import { PlaceSheet } from '@/components/PlaceSheet';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { LocationBar } from '@/components/LocationBar';
 import { MAP_PLACES, type Category, type DayId } from '@/data/trip';
 import { runningOrder, type Station } from '@/lib/route';
@@ -57,9 +58,19 @@ export function MapScreen(): JSX.Element {
 
   return (
     <div className="mx-auto flex h-dvh max-w-app flex-col">
+      {/* The map has its own header rather than the shared Screen, so the
+          appearance control has to be placed here too — it is on every other
+          screen and its absence here was the only gap. */}
       <header className="px-gutter pb-2 pt-6">
-        <p className="eyebrow">All five days · {MAP_PLACES.length} places</p>
-        <h1 className="mt-1 text-[2rem] font-bold tracking-[-0.035em]">Map</h1>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="eyebrow">All five days · {MAP_PLACES.length} places</p>
+            <h1 className="mt-1 text-[2rem] font-bold tracking-[-0.035em]">Map</h1>
+          </div>
+          <div className="shrink-0">
+            <ThemeToggle />
+          </div>
+        </div>
       </header>
 
       <div className="border-b-hairline border-rule px-gutter pb-2.5">

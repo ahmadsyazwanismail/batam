@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Logo } from './Logo';
+import { ThemeToggle } from './ThemeToggle';
 
 /**
  * The one column every screen lives in.
@@ -25,7 +26,10 @@ export function Screen({
             masthead does. It is the only place the wordmark appears. */}
         <div className="mb-5 flex items-center justify-between gap-3">
           <Logo size={26} />
-          <span className="eyebrow text-right">{eyebrow}</span>
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="eyebrow text-right">{eyebrow}</span>
+            <ThemeToggle />
+          </div>
         </div>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">

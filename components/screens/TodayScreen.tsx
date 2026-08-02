@@ -13,7 +13,6 @@ import { UpNext } from '@/components/UpNext';
 import { PrayerCard } from '@/components/PrayerCard';
 import { RestOfDayCard } from '@/components/RestOfDayCard';
 import { WeatherCard } from '@/components/Weather';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { useLocation } from '@/lib/useLocation';
 import { Countdown } from '@/components/Countdown';
 import { PackingList } from '@/components/PackingList';
@@ -60,15 +59,6 @@ export function TodayScreen(): JSX.Element {
       {phase.phase === 'before' && <BeforeTheTrip phase={phase} now={now} />}
       {phase.phase === 'during' && <DuringTheTrip phase={phase} now={now} />}
       {phase.phase === 'after' && <AfterTheTrip />}
-
-      {/* One setting, so it lives at the foot of the default screen rather
-          than behind a gear nobody would find on a five-day trip. */}
-      <section className="px-gutter pt-8">
-        <h2 className="eyebrow">Appearance</h2>
-        <div className="mt-2">
-          <ThemeToggle />
-        </div>
-      </section>
     </Screen>
   );
 }
