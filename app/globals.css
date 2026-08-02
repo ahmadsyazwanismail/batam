@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --paper: #f4f3ee;
+    --card: #fbfaf6;
+    --ink: #16181c;
+    /* One step darker than the specified #6B7078, which lands at 4.49:1 on
+       paper — a hundredth under the bar. See lib/contrast.test.ts. */
+    --muted: #666b73;
+    --rule: #dedcd3;
+
+    --line-1: #d93f3f;
+    --line-2: #e08a1e;
+    --line-3: #2e9e6b;
+    --line-4: #2c74bc;
+    --line-5: #7d4fb0;
+
+    /* Set per-route to the line running that day. Line colour is the only
+       saturated colour in the system and it always means "this day". */
+    --line: var(--line-1);
+    /* The same line, dark enough to be read as text on paper. */
+    --line-text: #c53939;
+
+    color-scheme: light;
+  }
+
+  html {
+    background-color: var(--paper);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+    /* The whole app is one column on a phone. Nothing scrolls sideways except
+       the map, which asks for it explicitly. */
+    overflow-x: hidden;
+  }
+
+  /* Focus is always visible, and always visible against paper. */
+  :focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--line);
+    color: #fff;
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply text-eyebrow font-semibold uppercase text-muted;
+  }
+
+  .rule-t {
+    @apply border-t border-hairline border-rule;
+  }
+
+  .rule-b {
+    @apply border-b border-hairline border-rule;
+  }
+
+  /* Tap targets are never smaller than this, anywhere. */
+  .tap {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  .numeric {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+}
+
+/* Every animation in the app is opt-out, in one place. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
