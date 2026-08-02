@@ -40,8 +40,6 @@
     font-size: 0.9375rem;
     line-height: 1.45rem;
     letter-spacing: -0.005em;
-    /* Real grotesques have proper alternates; ask for them where they exist. */
-    font-feature-settings: 'cv05' 1, 'cv08' 1, 'ss03' 1;
   }
 
   /* A grain so faint you would only notice it by its absence. It stops the

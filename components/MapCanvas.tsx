@@ -66,10 +66,15 @@ export function MapCanvas({
 
     // Building 33 markers is a few milliseconds of DOM work, but it lands in
     // the same long task as MapLibre's own start-up and pushes total blocking
-    // time over the line. Wait for the map to finish loading first — nothing
-    // can be tapped before then anyway.
+    // time over the line — so it goes in the next frame instead.
+    //
+    // Deliberately NOT on the map's `load` event. That fires only once the
+    // opening tiles are in, so on a phone with no signal it never fires at all
+    // and the map comes up with no pins on it — in an app whose whole premise
+    // is working without signal. The pins need nothing from the network; they
+    // must not wait on it.
     const created = markers.current;
-    instance.once('load', () => {
+    const frame = requestAnimationFrame(() => {
       for (const place of MAP_PLACES) {
         const element = buildPin(place);
         element.addEventListener('click', (e) => {
@@ -90,6 +95,7 @@ export function MapCanvas({
     });
 
     return () => {
+      cancelAnimationFrame(frame);
       created.forEach(({ marker }) => marker.remove());
       created.clear();
       clusterMarkers.current.forEach((m) => m.remove());
