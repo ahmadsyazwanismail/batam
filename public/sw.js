@@ -14,13 +14,20 @@
  * is compiled into the bundle and needs no network at all.
  */
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const APP_CACHE = `batam-app-${VERSION}`;
 const TILE_CACHE = `batam-tiles-${VERSION}`;
 const MAX_TILES = 700;
 
-/** The routes that must open with no signal. */
-const SHELL = ['/', '/map', '/lines', '/places', '/costs', '/manifest.webmanifest'];
+/**
+ * The routes that must open with no signal.
+ *
+ * This said `/lines` until the rework renamed the section to `/days`, so the
+ * one screen the app is built around was the one screen not in the offline
+ * shell. Anything listed here that 404s is skipped silently on install, which
+ * is why that went unnoticed.
+ */
+const SHELL = ['/', '/map', '/days', '/places', '/costs', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -105,17 +112,42 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Build assets under /_next/static are content-hashed: a given URL can only
+  // ever mean one thing, so a cache hit is always correct and always current.
+  if (url.pathname.startsWith('/_next/static/')) {
+    event.respondWith(
+      caches.match(request).then(
+        (hit) =>
+          hit ??
+          fetch(request).then((response) => {
+            if (response.ok && response.type === 'basic') {
+              const copy = response.clone();
+              caches.open(APP_CACHE).then((cache) => cache.put(request, copy));
+            }
+            return response;
+          }),
+      ),
+    );
+    return;
+  }
+
+  // Everything else same-origin keeps a stable URL across deploys — the icons,
+  // the manifest, the worker's own siblings. Cache-first on those meant a
+  // redeploy could never dislodge what an old visit had already stored, which
+  // is how a phone ends up running last month's app off a fresh deployment.
+  // Serve the copy we have, then quietly replace it for next time.
   event.respondWith(
-    caches.match(request).then(
-      (hit) =>
-        hit ??
-        fetch(request).then((response) => {
+    caches.open(APP_CACHE).then(async (cache) => {
+      const hit = await cache.match(request);
+      const fresh = fetch(request)
+        .then((response) => {
           if (response.ok && response.type === 'basic') {
-            const copy = response.clone();
-            caches.open(APP_CACHE).then((cache) => cache.put(request, copy));
+            cache.put(request, response.clone());
           }
           return response;
-        }),
-    ),
+        })
+        .catch(() => undefined);
+      return hit ?? (await fresh) ?? new Response('', { status: 504, statusText: 'Offline' });
+    }),
   );
 });
