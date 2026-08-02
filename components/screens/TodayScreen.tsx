@@ -12,13 +12,16 @@ import { DayComplete } from '@/components/DayComplete';
 import { UpNext } from '@/components/UpNext';
 import { PrayerCard } from '@/components/PrayerCard';
 import { RestOfDayCard } from '@/components/RestOfDayCard';
+import { WeatherCard } from '@/components/Weather';
 import { useLocation } from '@/lib/useLocation';
 import { Countdown } from '@/components/Countdown';
 import { PackingList } from '@/components/PackingList';
 import { requirePlace, FERRY, DAYS, MAP_PLACES, WARNINGS } from '@/data/trip';
 import {
+  formatMinutes,
   formatTripDate,
   mytClock,
+  parseHhmm,
   tripPhase,
   wibClock,
   wibMinutes,
@@ -119,12 +122,12 @@ function BeforeTheTrip({
             {outbound.from} → {outbound.to}
           </p>
           <p className="numeric mt-3 text-[1.375rem] font-bold tracking-[-0.02em]">
-            {outbound.departs}{' '}
+            {formatMinutes(parseHhmm(outbound.departs))}{' '}
             <span className="text-caption font-semibold text-muted">
               {outbound.departsZone}
             </span>
             <span className="px-2 text-muted">→</span>
-            {outbound.arrives}{' '}
+            {outbound.arrives ? formatMinutes(parseHhmm(outbound.arrives)) : ''}{' '}
             <span className="text-caption font-semibold text-muted">
               {outbound.arrivesZone}
             </span>
@@ -152,6 +155,8 @@ function BeforeTheTrip({
 
       <SectionHeading>Packing</SectionHeading>
       <PackingList />
+
+      <WeatherCard />
 
       <SectionHeading>Prayer times on Batam</SectionHeading>
       <div className="px-gutter">
@@ -187,6 +192,8 @@ function DuringTheTrip({
       <div className="mt-3 px-gutter">
         <LocationBar location={location} compact />
       </div>
+
+      <WeatherCard />
 
       <SectionHeading>The rest of today</SectionHeading>
       <div className="px-gutter">

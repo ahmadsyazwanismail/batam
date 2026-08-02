@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Screen } from '@/components/Screen';
 import { DayMenu } from '@/components/DayMenu';
 import { FixedPoints } from '@/components/FixedPoints';
+import { DayWeatherRow } from '@/components/Weather';
 import { DayComplete } from '@/components/DayComplete';
 import { LocationBar } from '@/components/LocationBar';
 import { DAYS, dayById, requirePlace, type DayId } from '@/data/trip';
@@ -51,6 +52,10 @@ export function DayScreen({ day }: { day: DayId }): JSX.Element {
         title={info.name}
       >
         <p className="px-gutter text-caption text-muted">Based at {base.name}</p>
+
+        <div className="px-gutter">
+          <DayWeatherRow date={info.date} />
+        </div>
 
         <div className="mt-3 px-gutter">
           {live || isToday ? (

@@ -24,7 +24,7 @@ export function Countdown({ days }: { days: number }): JSX.Element {
       </p>
       <p className="mt-3 text-caption text-muted">
         {formatTripDate(TRIP.startDate)} to {formatTripDate(TRIP.endDate)} ·{' '}
-        {DAYS.length} lines · {TRIP.travellers}
+        {DAYS.length} days · {TRIP.travellers}
       </p>
     </div>
   );
