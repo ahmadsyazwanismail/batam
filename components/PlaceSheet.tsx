@@ -1,11 +1,11 @@
 'use client';
 
 import type { Station } from '@/lib/route';
-import { lineById, type LineId } from '@/data/trip';
+import { dayById, type DayId } from '@/data/trip';
 import { directionsUrl, formatKm } from '@/lib/geo';
 import { useTrip } from '@/lib/store';
 import { Sheet } from './Sheet';
-import { LineBadge } from './LineBadge';
+import { PlaceField } from './PlaceField';
 import { CATEGORY_LABEL, CategoryIcon } from './CategoryIcon';
 
 /**
@@ -18,7 +18,7 @@ export function PlaceSheet({
   onClose,
 }: {
   station: Station | null;
-  line: LineId;
+  line: DayId;
   onClose: () => void;
 }): JSX.Element {
   const done = useTrip((s) => s.done);
@@ -26,7 +26,7 @@ export function PlaceSheet({
 
   const place = station?.place;
   const isDone = place ? done.includes(place.key) : false;
-  const { name: lineName } = lineById(line);
+  const { name: lineName } = dayById(line);
 
   return (
     <Sheet open={station !== null} onClose={onClose} title={place?.name ?? 'Station'}>
@@ -46,7 +46,7 @@ export function PlaceSheet({
               </h3>
             </div>
             <div className="shrink-0 pt-1">
-              <LineBadge line={line} size="md" shared />
+              <PlaceField place={place} className="h-14 w-14 shrink-0 rounded-sm" />
             </div>
           </div>
 
@@ -93,7 +93,7 @@ export function PlaceSheet({
               href={directionsUrl(place)}
               target="_blank"
               rel="noreferrer"
-              className="tap flex items-center justify-center bg-ink py-3 font-semibold text-card"
+              className="btn-solid py-3"
             >
               Directions
             </a>
@@ -101,7 +101,7 @@ export function PlaceSheet({
               type="button"
               onClick={() => toggleDone(place.key)}
               aria-pressed={isDone}
-              className="tap flex items-center justify-center border py-3 font-semibold"
+              className="btn border py-3"
               style={
                 isDone
                   ? { borderColor: 'var(--line)', color: 'var(--line-text)' }

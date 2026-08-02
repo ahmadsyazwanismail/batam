@@ -90,7 +90,7 @@ export function Sheet({
             aria-modal="true"
             aria-labelledby={titleId}
             tabIndex={-1}
-            className="fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[85dvh] max-w-app overflow-y-auto overscroll-contain border-t border-hairline border-rule bg-card focus:outline-none"
+            className="fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[85dvh] max-w-app overflow-y-auto overscroll-contain rounded-t-sheet border-t border-hairline border-rule bg-card focus:outline-none"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
             initial={reduced ? { opacity: 0 } : { y: '100%' }}
             animate={reduced ? { opacity: 1 } : { y: 0 }}
@@ -124,7 +124,7 @@ export function Sheet({
               <button
                 type="button"
                 onClick={onClose}
-                className="tap w-full border border-hairline border-rule py-3 text-caption font-semibold uppercase tracking-[0.1em] text-muted"
+                className="btn-ghost w-full py-3 text-caption uppercase tracking-[0.1em] text-muted"
               >
                 Close
               </button>

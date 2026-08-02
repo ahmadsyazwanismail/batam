@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import { lineById, type LineId } from '@/data/trip';
-import { activeLine } from '@/lib/time';
+import { dayById, type DayId } from '@/data/trip';
+import { activeDay } from '@/lib/time';
 
 /**
  * Paints `--line` with the colour of the day that is running.
@@ -11,9 +11,9 @@ import { activeLine } from '@/lib/time';
  * and a server-rendered guess would flash the wrong day on the first paint.
  * An explicit `line` wins, so a day's own screen can override the calendar.
  */
-export function LineTheme({ line }: { line?: LineId }): null {
+export function DayTheme({ line }: { line?: DayId }): null {
   useEffect(() => {
-    const { colour, textColour } = line ? lineById(line) : activeLine();
+    const { colour, textColour } = line ? dayById(line) : activeDay();
     const root = document.documentElement;
     root.style.setProperty('--line', colour);
     root.style.setProperty('--line-text', textColour);

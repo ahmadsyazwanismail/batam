@@ -4,21 +4,27 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Card, Screen, SectionHeading } from '@/components/Screen';
-import { LineBadge } from '@/components/LineBadge';
-import { StripMap } from '@/components/StripMap';
+import { DayMenu } from '@/components/DayMenu';
 import { Advisor } from '@/components/Advisor';
 import { NearestStrip } from '@/components/NearestStrip';
 import { LocationBar } from '@/components/LocationBar';
 import { DayComplete } from '@/components/DayComplete';
 import { UpNext } from '@/components/UpNext';
 import { PrayerCard } from '@/components/PrayerCard';
-import { LineProgress } from '@/components/LineProgress';
-import { runningOrder } from '@/lib/route';
+import { RestOfDayCard } from '@/components/RestOfDayCard';
 import { useLocation } from '@/lib/useLocation';
 import { Countdown } from '@/components/Countdown';
 import { PackingList } from '@/components/PackingList';
-import { requirePlace, FERRY, LINES, MAP_PLACES, WARNINGS } from '@/data/trip';
-import { formatTripDate, mytClock, tripPhase, wibClock, type TripPhase } from '@/lib/time';
+import { requirePlace, FERRY, DAYS, MAP_PLACES, WARNINGS } from '@/data/trip';
+import {
+  formatTripDate,
+  mytClock,
+  tripPhase,
+  wibClock,
+  wibMinutes,
+  type TripPhase,
+} from '@/lib/time';
+import { currentMeal, nextMeal } from '@/lib/meals';
 import { listVariants, stationVariants } from '@/lib/motion';
 
 /**
@@ -44,7 +50,7 @@ export function TodayScreen(): JSX.Element {
   return (
     <Screen
       eyebrow="Batam · 21–25 Aug 2026"
-      title={<TodayTitle phase={phase} />}
+      title={<TodayTitle phase={phase} now={now} />}
       trailing={<Clock now={now} />}
     >
       {phase.phase === 'before' && <BeforeTheTrip phase={phase} now={now} />}
@@ -54,10 +60,15 @@ export function TodayScreen(): JSX.Element {
   );
 }
 
-function TodayTitle({ phase }: { phase: TripPhase }): JSX.Element {
+/** The headline is the meal, when there is one. */
+function TodayTitle({ phase, now }: { phase: TripPhase; now: Date }): JSX.Element {
   if (phase.phase === 'before') return <>Not yet</>;
   if (phase.phase === 'after') return <>Home</>;
-  return <>{phase.line.name}</>;
+
+  const meal = currentMeal(wibMinutes(now));
+  if (meal) return <>{meal.name}</>;
+  const next = nextMeal(wibMinutes(now));
+  return next ? <>Before {next.name.toLowerCase()}</> : <>{phase.day.name}</>;
 }
 
 /**
@@ -157,25 +168,16 @@ function DuringTheTrip({
   phase: Extract<TripPhase, { phase: 'during' }>;
   now: Date;
 }): JSX.Element {
-  const { line, dayNumber } = phase;
+  const { day: line, dayNumber } = phase;
   const base = requirePlace(line.base);
   const location = useLocation(now);
 
   return (
     <>
-      <div className="flex items-center gap-3 px-gutter">
-        <LineBadge line={line.id} size="lg" shared />
-        <div className="min-w-0 flex-1">
-          <p className="eyebrow">
-            Day {dayNumber} of {LINES.length} · {formatTripDate(line.date)}
-          </p>
-          <p className="mt-1 text-body font-semibold">Based at {base.name}</p>
-        </div>
-      </div>
-
-      <div className="mt-4 px-gutter">
-        <LineProgress line={line.id} />
-      </div>
+      <p className="px-gutter text-caption text-muted">
+        Day {dayNumber} of {DAYS.length} · {formatTripDate(line.date)} · based at{' '}
+        {base.name}
+      </p>
 
       {/* Job one: what should we do now. It goes above everything else. */}
       <div className="mt-5 px-gutter">
@@ -184,6 +186,11 @@ function DuringTheTrip({
 
       <div className="mt-3 px-gutter">
         <LocationBar location={location} compact />
+      </div>
+
+      <SectionHeading>The rest of today</SectionHeading>
+      <div className="px-gutter">
+        <RestOfDayCard now={now} from={location.origin.point} day={line.id} />
       </div>
 
       <UpNext now={now} from={location.origin.point} />
@@ -195,15 +202,12 @@ function DuringTheTrip({
         <PrayerCard now={now} from={location.origin.point} />
       </div>
 
-      <SectionHeading>Today’s running order</SectionHeading>
-      <StripMap line={line.id} stations={runningOrder(line.id)} />
+      <SectionHeading>Today’s meals</SectionHeading>
+      <DayMenu day={line.id} from={location.origin.point} />
 
-      <div className="px-gutter pt-5">
-        <Link
-          href={`/lines/${line.id}`}
-          className="tap inline-flex items-center text-caption font-semibold"
-        >
-          Open the {line.name} line →
+      <div className="px-gutter pt-6">
+        <Link href={`/days/${line.id}`} className="btn-ghost w-full py-3 text-caption">
+          Open day {line.id} in full
         </Link>
       </div>
 

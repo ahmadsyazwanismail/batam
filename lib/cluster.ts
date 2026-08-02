@@ -1,4 +1,4 @@
-import type { LineId } from '@/data/trip';
+import type { DayId } from '@/data/trip';
 
 /**
  * Screen-space clustering for map pins.
@@ -17,7 +17,7 @@ export interface ScreenPoint {
   readonly key: string;
   readonly x: number;
   readonly y: number;
-  readonly line: LineId;
+  readonly day: DayId;
 }
 
 export interface Cluster {
@@ -35,7 +35,7 @@ export interface Cluster {
   readonly x: number;
   readonly y: number;
   /** The line every member belongs to, or null when the group is mixed. */
-  readonly line: LineId | null;
+  readonly day: DayId | null;
 }
 
 /**
@@ -64,12 +64,12 @@ export function clusterByScreen(
       members.push(other);
     }
 
-    const lines = new Set(members.map((m) => m.line));
+    const lines = new Set(members.map((m) => m.day));
     clusters.push({
       keys: members.map((m) => m.key),
       x: point.x,
       y: point.y,
-      line: lines.size === 1 ? members[0]!.line : null,
+      day: lines.size === 1 ? members[0]!.day : null,
     });
   }
 

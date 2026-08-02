@@ -30,7 +30,7 @@ export function TabBar(): JSX.Element {
                 href={tab.href}
                 aria-current={isActive ? 'page' : undefined}
                 className="tap relative flex h-[4.25rem] flex-col items-center justify-center gap-1 text-muted transition-colors"
-                style={isActive ? { color: 'var(--line-text)' } : undefined}
+                style={isActive ? { color: 'var(--accent)' } : undefined}
               >
                 {isActive && (
                   <motion.span
@@ -38,7 +38,7 @@ export function TabBar(): JSX.Element {
                     transition={SPRING}
                     aria-hidden
                     className="absolute inset-x-3 top-0 h-[3px]"
-                    style={{ backgroundColor: 'var(--line)' }}
+                    style={{ backgroundColor: 'var(--accent)' }}
                   />
                 )}
                 <TabIcon name={tab.icon} />

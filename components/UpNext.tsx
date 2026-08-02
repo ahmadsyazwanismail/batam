@@ -28,7 +28,7 @@ export function UpNext({ now, from }: { now: Date; from: LatLon }): JSX.Element 
         variants={listVariants}
         initial={reduced ? false : 'hidden'}
         animate="show"
-        className="border-y border-hairline border-rule bg-card"
+        className="mx-gutter overflow-hidden rounded-md border border-hairline border-rule bg-card"
       >
         {rows.map((row) => (
           <motion.li

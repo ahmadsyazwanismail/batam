@@ -29,7 +29,7 @@ export function Screen({
         </div>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-display font-bold">{title}</h1>
+            <h1 className="signboard text-display">{title}</h1>
           </div>
           {trailing ? <div className="shrink-0 pt-1">{trailing}</div> : null}
         </div>
@@ -48,7 +48,7 @@ export function Card({
   className?: string;
 }): JSX.Element {
   return (
-    <div className={`border border-hairline border-rule bg-card ${className}`}>
+    <div className={`rounded-md border border-hairline border-rule bg-card ${className}`}>
       {children}
     </div>
   );

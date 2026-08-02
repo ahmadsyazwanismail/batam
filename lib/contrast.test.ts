@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { AA_LARGE, AA_NORMAL, contrastRatio } from './contrast';
-import { CARD_BG, INK, LINES, PAPER } from '@/data/trip';
+import { CARD_BG, INK, DAYS, PAPER } from '@/data/trip';
 
 /** Kept in step with globals.css and tailwind.config.ts. */
 const MUTED = '#666B73';
@@ -39,7 +39,7 @@ describe('body text', () => {
 describe('line colours', () => {
   it('reads the numeral inside every bullet', () => {
     // Bullets are 20px bold and up, so the large-text bar applies.
-    for (const line of LINES) {
+    for (const line of DAYS) {
       expect(
         contrastRatio(line.onColour, line.colour),
         `line ${line.id}`,
@@ -48,7 +48,7 @@ describe('line colours', () => {
   });
 
   it('reads every line colour set as text, on paper and on card', () => {
-    for (const line of LINES) {
+    for (const line of DAYS) {
       for (const bg of [PAPER, CARD_BG]) {
         expect(
           contrastRatio(line.textColour, bg),
@@ -61,13 +61,13 @@ describe('line colours', () => {
   it('shows why the text variant is needed at all', () => {
     // Crosstown orange as text on paper is 2.4:1 — it fails even the large-text
     // bar, which is the whole reason `textColour` exists.
-    const crosstown = LINES[1]!;
+    const crosstown = DAYS[1]!;
     expect(contrastRatio(crosstown.colour, PAPER)).toBeLessThan(AA_LARGE);
     expect(contrastRatio(crosstown.textColour, PAPER)).toBeGreaterThanOrEqual(AA_NORMAL);
   });
 
   it('leaves the specified colours untouched', () => {
-    expect(LINES.map((l) => l.colour)).toEqual([
+    expect(DAYS.map((l) => l.colour)).toEqual([
       '#D93F3F',
       '#E08A1E',
       '#2E9E6B',
@@ -78,7 +78,7 @@ describe('line colours', () => {
 
   it('keeps each text variant recognisably its own line', () => {
     // A darkened sibling, not a different colour: no two lines may collide.
-    expect(new Set(LINES.map((l) => l.textColour)).size).toBe(LINES.length);
+    expect(new Set(DAYS.map((l) => l.textColour)).size).toBe(DAYS.length);
   });
 });
 

@@ -6,7 +6,7 @@ import { Screen } from '@/components/Screen';
 import { LocationBar } from '@/components/LocationBar';
 import { FilterChips } from '@/components/FilterChips';
 import { Distance } from '@/components/Distance';
-import { LineBadge } from '@/components/LineBadge';
+import { PlaceField } from '@/components/PlaceField';
 import { CategoryIcon } from '@/components/CategoryIcon';
 import { PlaceSheet } from '@/components/PlaceSheet';
 import { EmptyState } from '@/components/EmptyState';
@@ -14,7 +14,7 @@ import {
   MAP_PLACES,
   searchTerms,
   type Category,
-  type LineId,
+  type DayId,
   type Place,
 } from '@/data/trip';
 import { haversineKm } from '@/lib/geo';
@@ -35,7 +35,7 @@ import { listVariants, stationVariants, usePrefersReducedMotion } from '@/lib/mo
 export function PlacesScreen(): JSX.Element {
   const [now, setNow] = useState<Date | null>(null);
   const [query, setQuery] = useState('');
-  const [lines, setLines] = useState<ReadonlySet<LineId>>(new Set());
+  const [lines, setLines] = useState<ReadonlySet<DayId>>(new Set());
   const [categories, setCategories] = useState<ReadonlySet<Category>>(new Set());
   const [openKey, setOpenKey] = useState<string | null>(null);
 
@@ -66,7 +66,7 @@ export function PlacesScreen(): JSX.Element {
         matchesCategory: categories.size === 0 || categories.has(place.category),
         // Line filters dim rather than remove, so the shape of the network
         // stays visible — you can still see how much of the day you skipped.
-        onSelectedLine: lines.size === 0 || lines.has(place.line),
+        onSelectedLine: lines.size === 0 || lines.has(place.day),
       };
     })
       .filter((row) => row.matchesQuery && row.matchesCategory)
@@ -79,12 +79,12 @@ export function PlacesScreen(): JSX.Element {
     [],
   );
 
-  const openStation = useMemo((): { station: Station; line: LineId } | null => {
+  const openStation = useMemo((): { station: Station; line: DayId } | null => {
     if (!openKey) return null;
     const place = MAP_PLACES.find((p) => p.key === openKey);
     if (!place) return null;
-    const station = runningOrder(place.line).find((s) => s.place.key === openKey);
-    return station ? { station, line: place.line } : null;
+    const station = runningOrder(place.day).find((s) => s.place.key === openKey);
+    return station ? { station, line: place.day } : null;
   }, [openKey]);
 
   // Everything below depends on the clock and on where the phone is. This page
@@ -115,7 +115,7 @@ export function PlacesScreen(): JSX.Element {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search — try “Renuin” or “nasi padang”"
-          className="tap mb-2.5 w-full border border-hairline border-rule bg-card px-3 py-2.5 text-[1rem] placeholder:text-muted"
+          className="tap mb-2.5 w-full rounded border border-hairline border-rule bg-card px-3 py-2.5 text-[1rem] placeholder:text-muted"
         />
         <FilterChips
           lines={lines}
@@ -216,9 +216,7 @@ function PlaceRow({
         tabIndex={dimmed ? -1 : 0}
         className="tap flex w-full items-start gap-3 px-gutter py-3 text-left"
       >
-        <span className="shrink-0 pt-0.5">
-          <LineBadge line={place.line} size="sm" />
-        </span>
+        <PlaceField place={place} className="h-11 w-11 shrink-0 rounded-sm" />
 
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline gap-2">

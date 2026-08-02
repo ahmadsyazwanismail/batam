@@ -30,8 +30,8 @@ export function LocationBar({
           <button
             type="button"
             onClick={ask}
-            className="tap shrink-0 px-3 py-2 text-caption font-semibold text-card"
-            style={{ backgroundColor: 'var(--line-text)' }}
+            className="btn shrink-0 px-3 py-2 text-caption text-card"
+            style={{ backgroundColor: 'var(--accent)' }}
           >
             Use my location
           </button>
@@ -50,8 +50,8 @@ export function LocationBar({
         <button
           type="button"
           onClick={ask}
-          className="tap mt-3 w-full py-3 font-semibold text-card"
-          style={{ backgroundColor: 'var(--line-text)' }}
+          className="btn mt-3 w-full py-3 text-card"
+          style={{ backgroundColor: 'var(--accent)' }}
         >
           Use my location
         </button>

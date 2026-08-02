@@ -3,15 +3,15 @@ import {
   BOOKINGS,
   COSTS,
   FERRY,
-  LINES,
+  DAYS,
   MAP_PLACES,
   PLACES,
   getPlace,
-  lineByDate,
-  placesOnLine,
+  dayByDate,
+  placesOnDay,
   requirePlace,
   searchTerms,
-  type LineId,
+  type DayId,
 } from './trip';
 import { formatTripDate } from '@/lib/time';
 
@@ -35,7 +35,7 @@ describe('places', () => {
 
   it('puts every place on a real line', () => {
     for (const p of PLACES) {
-      expect(LINES.some((l) => l.id === p.line), p.key).toBe(true);
+      expect(DAYS.some((l) => l.id === p.day), p.key).toBe(true);
     }
   });
 });
@@ -92,7 +92,7 @@ describe('malls', () => {
 
 describe('lines', () => {
   it('runs five consecutive days, 21 to 25 August', () => {
-    expect(LINES.map((l) => l.date)).toEqual([
+    expect(DAYS.map((l) => l.date)).toEqual([
       '2026-08-21',
       '2026-08-22',
       '2026-08-23',
@@ -102,45 +102,45 @@ describe('lines', () => {
   });
 
   it('labels each day with the weekday it actually falls on', () => {
-    for (const line of LINES) {
+    for (const line of DAYS) {
       expect(formatTripDate(line.date).startsWith(line.weekday), line.date).toBe(true);
     }
   });
 
   it('bases every line at a hotel that exists', () => {
-    for (const line of LINES) {
+    for (const line of DAYS) {
       expect(requirePlace(line.base).category, `line ${line.id}`).toBe('hotel');
     }
   });
 
   it('moves hotel exactly once', () => {
-    const bases = LINES.map((l) => l.base);
+    const bases = DAYS.map((l) => l.base);
     const moves = bases.filter((b, i) => i > 0 && b !== bases[i - 1]);
     expect(moves).toEqual(['radisson']);
   });
 
   it('gives every line a distinct colour', () => {
-    expect(new Set(LINES.map((l) => l.colour)).size).toBe(LINES.length);
+    expect(new Set(DAYS.map((l) => l.colour)).size).toBe(DAYS.length);
   });
 
   it('has at least one place on every line', () => {
-    for (const line of LINES) {
-      expect(placesOnLine(line.id).length, `line ${line.id}`).toBeGreaterThan(0);
+    for (const line of DAYS) {
+      expect(placesOnDay(line.id).length, `line ${line.id}`).toBeGreaterThan(0);
     }
   });
 
   it('looks up by date', () => {
-    expect(lineByDate('2026-08-24')?.name).toBe('Northern loop');
-    expect(lineByDate('2026-08-26')).toBeUndefined();
+    expect(dayByDate('2026-08-24')?.name).toBe('Northern loop');
+    expect(dayByDate('2026-08-26')).toBeUndefined();
   });
 
   it('accounts for every place across the five lines', () => {
-    const counted = LINES.reduce((n, l) => n + placesOnLine(l.id).length, 0);
+    const counted = DAYS.reduce((n, l) => n + placesOnDay(l.id).length, 0);
     expect(counted).toBe(PLACES.length);
   });
 
   it('rejects a line id that does not exist', () => {
-    expect(placesOnLine(9 as LineId)).toHaveLength(0);
+    expect(placesOnDay(9 as DayId)).toHaveLength(0);
   });
 });
 
@@ -157,8 +157,8 @@ describe('bookings and ferry', () => {
 
   it('sails out on day one and back on day five', () => {
     const [out, back] = FERRY.legs;
-    expect(out.date).toBe(LINES[0]!.date);
-    expect(back.date).toBe(LINES[4]!.date);
+    expect(out.date).toBe(DAYS[0]!.date);
+    expect(back.date).toBe(DAYS[4]!.date);
   });
 
   it('crosses in an hour of wall clock, which is two hours of confusion', () => {

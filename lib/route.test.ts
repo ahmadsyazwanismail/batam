@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { allRunningOrders, runningOrder } from './route';
 import { haversineKm } from './geo';
-import { LINES, MAP_PLACES, type LineId } from '@/data/trip';
+import { DAYS, MAP_PLACES, type DayId } from '@/data/trip';
 
-const keys = (line: LineId): string[] => runningOrder(line).map((s) => s.place.key);
+const keys = (line: DayId): string[] => runningOrder(line).map((s) => s.place.key);
 
 describe('running order', () => {
   it('covers every pinnable place on the line', () => {
-    for (const line of LINES) {
-      const own = MAP_PLACES.filter((p) => p.line === line.id).map((p) => p.key);
+    for (const line of DAYS) {
+      const own = MAP_PLACES.filter((p) => p.day === line.id).map((p) => p.key);
       const ordered = keys(line.id);
       for (const key of own) {
         expect(ordered, `line ${line.id} is missing ${key}`).toContain(key);
@@ -17,14 +17,14 @@ describe('running order', () => {
   });
 
   it('never repeats a station', () => {
-    for (const line of LINES) {
+    for (const line of DAYS) {
       const ordered = keys(line.id);
       expect(new Set(ordered).size, `line ${line.id}`).toBe(ordered.length);
     }
   });
 
   it('numbers stations from one, in order', () => {
-    for (const line of LINES) {
+    for (const line of DAYS) {
       runningOrder(line.id).forEach((station, i) => {
         expect(station.index).toBe(i + 1);
       });
@@ -32,7 +32,7 @@ describe('running order', () => {
   });
 
   it('marks the first and last stations as termini and nothing in between', () => {
-    for (const line of LINES) {
+    for (const line of DAYS) {
       const stations = runningOrder(line.id);
       expect(stations[0]!.terminus).toBe('start');
       expect(stations[stations.length - 1]!.terminus).toBe('end');
@@ -90,7 +90,7 @@ describe('the day starts where the day actually starts', () => {
   });
 
   it('does not invent a check-out on days that do not have one', () => {
-    for (const line of [3, 4] as LineId[]) {
+    for (const line of [3, 4] as DayId[]) {
       const stations = runningOrder(line);
       expect(stations[0]!.connection).toBe('Base');
       // And nothing in the middle of a day claims to be a connection.
@@ -101,7 +101,7 @@ describe('the day starts where the day actually starts', () => {
   });
 
   it('only ever labels a connection on a terminus', () => {
-    for (const line of LINES) {
+    for (const line of DAYS) {
       for (const station of runningOrder(line.id)) {
         if (station.connection) expect(station.terminus).not.toBeNull();
       }
@@ -117,7 +117,7 @@ describe('the day starts where the day actually starts', () => {
   });
 
   it('starts every other day at that day’s hotel', () => {
-    for (const line of [3, 4] as LineId[]) {
+    for (const line of [3, 4] as DayId[]) {
       expect(runningOrder(line)[0]!.place.key).toBe('radisson');
     }
   });
@@ -130,7 +130,7 @@ describe('opening times constrain the order', () => {
   });
 
   it('pushes everything that opens after midday behind everything that does not', () => {
-    for (const line of LINES) {
+    for (const line of DAYS) {
       const stations = runningOrder(line.id);
       // The closing connection is where the day ends by definition, so it is
       // exempt from the morning/afternoon split.
@@ -167,7 +167,7 @@ describe('opening times constrain the order', () => {
 
 describe('distances between stations', () => {
   it('has no distance on the first station and one on every other', () => {
-    for (const line of LINES) {
+    for (const line of DAYS) {
       const stations = runningOrder(line.id);
       expect(stations[0]!.fromPreviousKm).toBeNull();
       for (const station of stations.slice(1)) {
@@ -188,11 +188,11 @@ describe('distances between stations', () => {
 
   it('beats naive alphabetical order on total walking', () => {
     // The point of routing at all: consecutive stops should be near each other.
-    for (const line of [3, 4] as LineId[]) {
+    for (const line of [3, 4] as DayId[]) {
       const stations = runningOrder(line);
       const routed = stations.reduce((n, s) => n + (s.fromPreviousKm ?? 0), 0);
 
-      const alphabetical = [...MAP_PLACES.filter((p) => p.line === line)].sort((a, b) =>
+      const alphabetical = [...MAP_PLACES.filter((p) => p.day === line)].sort((a, b) =>
         a.name.localeCompare(b.name),
       );
       const naive = alphabetical.reduce(
@@ -208,8 +208,8 @@ describe('distances between stations', () => {
 describe('allRunningOrders', () => {
   it('returns one order per line', () => {
     const all = allRunningOrders();
-    expect(Object.keys(all)).toHaveLength(LINES.length);
-    for (const line of LINES) {
+    expect(Object.keys(all)).toHaveLength(DAYS.length);
+    for (const line of DAYS) {
       expect(all[line.id]!.length).toBeGreaterThan(0);
     }
   });

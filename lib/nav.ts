@@ -7,13 +7,13 @@
 export interface Tab {
   readonly href: string;
   readonly label: string;
-  readonly icon: 'today' | 'map' | 'lines' | 'places' | 'costs';
+  readonly icon: 'today' | 'map' | 'days' | 'places' | 'costs';
 }
 
 export const TABS: readonly Tab[] = [
   { href: '/', label: 'Today', icon: 'today' },
   { href: '/map', label: 'Map', icon: 'map' },
-  { href: '/lines', label: 'Lines', icon: 'lines' },
+  { href: '/days', label: 'Days', icon: 'days' },
   { href: '/places', label: 'Places', icon: 'places' },
   { href: '/costs', label: 'Costs', icon: 'costs' },
 ];
@@ -21,7 +21,7 @@ export const TABS: readonly Tab[] = [
 export function tabIndex(pathname: string): number {
   const exact = TABS.findIndex((t) => t.href === pathname);
   if (exact !== -1) return exact;
-  // /lines/3 still lights the Lines tab.
+  // /days/3 still lights the Lines tab.
   const nested = TABS.findIndex((t) => t.href !== '/' && pathname.startsWith(t.href));
   return nested === -1 ? 0 : nested;
 }

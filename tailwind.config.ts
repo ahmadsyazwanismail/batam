@@ -16,13 +16,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        paper: '#F4F3EE',
-        card: '#FBFAF6',
-        ink: '#16181C',
-        // One step darker than the specified #6B7078, which misses 4.5:1 on
-        // paper by a hundredth. Held to the bar by lib/contrast.test.ts.
-        muted: '#666B73',
-        rule: '#DEDCD3',
+        // Makan. Warm paper, roasted ink, and a sambal accent. Every value
+        // here was measured before it was chosen — see lib/contrast.test.ts.
+        paper: '#FBF3E6',
+        card: '#FFFDF8',
+        ink: '#2A1A10',
+        muted: '#7A6250',
+        rule: '#E7D8BE',
+        accent: '#C2410C',
+        meal: {
+          sarapan: '#E39B3C',
+          tengahari: '#C2410C',
+          petang: '#7E9A4E',
+          malam: '#6B4A8C',
+        },
         line: {
           1: '#D93F3F',
           2: '#E08A1E',
@@ -36,11 +43,19 @@ const config: Config = {
         // for anyone who already has the real thing installed.
         sans: [
           'var(--font-inter)',
-          'Helvetica Now Display',
-          'Söhne',
+          'Helvetica Now Text',
           'Inter',
           'Helvetica Neue',
           'Arial',
+          'sans-serif',
+        ],
+        // Warung signboard: condensed, set large and uppercase. Self-hosted,
+        // so it looks the same on every phone rather than only on Apple ones.
+        display: [
+          'var(--font-signboard)',
+          'Avenir Next Condensed',
+          'Arial Narrow',
+          'var(--font-inter)',
           'sans-serif',
         ],
       },
@@ -54,17 +69,18 @@ const config: Config = {
         body: ['0.9375rem', { lineHeight: '1.45rem', letterSpacing: '-0.005em' }],
         lede: ['1.0625rem', { lineHeight: '1.5rem', letterSpacing: '-0.012em' }],
         title: ['1.375rem', { lineHeight: '1.6rem', letterSpacing: '-0.022em' }],
-        display: ['2.625rem', { lineHeight: '0.98', letterSpacing: '-0.04em' }],
-        'display-lg': ['4rem', { lineHeight: '0.9', letterSpacing: '-0.045em' }],
+        display: ['3rem', { lineHeight: '0.92', letterSpacing: '0.004em' }],
+        'display-lg': ['4.4rem', { lineHeight: '0.88', letterSpacing: '0.004em' }],
       },
       borderRadius: {
-        // Mostly square. Pills are the deliberate exception, and they are `rounded-full`.
+        // Makan is softer than the transit system it replaced — food wants
+        // warmth, not signage precision. Pills stay `rounded-full`.
         none: '0',
-        sm: '2px',
-        DEFAULT: '3px',
-        md: '4px',
-        lg: '6px',
-        sheet: '14px',
+        sm: '6px',
+        DEFAULT: '10px',
+        md: '12px',
+        lg: '14px',
+        sheet: '20px',
       },
       borderWidth: {
         // A true hairline on a retina screen. `1px` is two device pixels on a

@@ -2,9 +2,9 @@ import {
   FERRY,
   HOLIDAY_DATE,
   MAP_PLACES,
-  lineByDate,
+  dayByDate,
   type Category,
-  type LineId,
+  type DayId,
   type MinutesOfDay,
   type Place,
 } from '@/data/trip';
@@ -97,7 +97,7 @@ export function advise(input: AdvisorInput): Advice | NoAdvice {
   const { now, from, done, raining = false } = input;
   const minutes = wibMinutes(now);
   const today = wibDate(now);
-  const line = lineByDate(today);
+  const line = dayByDate(today);
   const isLastDay = today === HOLIDAY_DATE;
 
   if (!line) {
@@ -173,16 +173,16 @@ export function advise(input: AdvisorInput): Advice | NoAdvice {
 
 function score(
   candidate: Candidate,
-  ctx: { minutes: number; line: LineId; raining: boolean; isLastDay: boolean },
+  ctx: { minutes: number; line: DayId; raining: boolean; isLastDay: boolean },
 ): void {
   const { place, km } = candidate;
   const { minutes, line, raining } = ctx;
   let total = 0;
 
   // Today's line first. Crossing lines is allowed but has to be worth it.
-  if (place.line === line) {
+  if (place.day === line) {
     total += 3;
-    candidate.notes.push('on today’s line');
+    candidate.notes.push('on today’s plan');
   } else {
     total -= 1.5;
   }
@@ -236,14 +236,14 @@ function isMealtime(minutes: MinutesOfDay): boolean {
 }
 
 /** One sentence, and it has to say why. */
-function sentence(candidate: Candidate, line: LineId): string {
+function sentence(candidate: Candidate, line: DayId): string {
   const { place, verdict, notes } = candidate;
   const how =
     verdict.mode === 'grab'
       ? `${verdict.fare.text} in a Grab, about ${candidate.travelMinutes} minutes`
       : verdict.text;
 
-  const why = notes.length > 0 ? notes[0]! : place.line === line ? 'on today’s line' : 'worth the hop';
+  const why = notes.length > 0 ? notes[0]! : place.day === line ? 'on today’s plan' : 'worth the hop';
   return `${place.name} is ${how} away and open — ${why}.`;
 }
 
@@ -257,7 +257,7 @@ function noneReason(minutes: MinutesOfDay, isLastDay: boolean): string {
   if (minutes >= EVENING) {
     return 'Everything on the list is either shut or too far for this hour.';
   }
-  return 'Everything nearby is ticked off. Try another line, or the map.';
+  return 'Everything nearby is ticked off. Try another day, or the map.';
 }
 
 function formatClock(minutes: MinutesOfDay): string {

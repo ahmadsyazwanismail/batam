@@ -22,7 +22,7 @@ export type Category =
   | 'spa'
   | 'dino';
 
-export type LineId = 1 | 2 | 3 | 4 | 5;
+export type DayId = 1 | 2 | 3 | 4 | 5;
 
 /** Minutes from midnight, WIB. 13:30 is 810. */
 export type MinutesOfDay = number;
@@ -61,7 +61,7 @@ export interface Place {
   readonly lat: number;
   readonly lon: number;
   readonly category: Category;
-  readonly line: LineId;
+  readonly day: DayId;
   readonly note: string;
   /** Set on malls. These are drawn as contents rather than as separate pins. */
   readonly tenants?: readonly Tenant[];
@@ -71,8 +71,8 @@ export interface Place {
   readonly opening?: OpeningHours;
 }
 
-export interface Line {
-  readonly id: LineId;
+export interface Day {
+  readonly id: DayId;
   /** ISO date, the day this line runs. */
   readonly date: string;
   /** Weekday as printed on the ticket, e.g. "Fri". */
@@ -139,7 +139,7 @@ export interface Warning {
 // ---------------------------------------------------------------------------
 
 export const TRIP = {
-  title: 'Batam Lines',
+  title: 'Batam',
   startDate: '2026-08-21',
   endDate: '2026-08-25',
   travellers: '2 adults + 1 daughter (1 y 10 m)',
@@ -154,7 +154,7 @@ export const INK = '#16181C';
 export const PAPER = '#F4F3EE';
 export const CARD_BG = '#FBFAF6';
 
-export const LINES: readonly Line[] = [
+export const DAYS: readonly Day[] = [
   {
     id: 1,
     date: '2026-08-21',
@@ -227,7 +227,7 @@ const PLACE_DATA = [
     lat: 1.15384,
     lon: 103.99737,
     category: 'ferry',
-    line: 1,
+    day: 1,
     note: 'camera collected here on arrival',
   },
   {
@@ -236,7 +236,7 @@ const PLACE_DATA = [
     lat: 1.0293,
     lon: 104.015,
     category: 'land',
-    line: 1,
+    day: 1,
     note: 'crossed on the drive down',
   },
   {
@@ -245,7 +245,7 @@ const PLACE_DATA = [
     lat: 0.9825,
     lon: 104.0341,
     category: 'hotel',
-    line: 1,
+    day: 1,
     note: '21–22 Aug · pool access room',
   },
 
@@ -256,7 +256,7 @@ const PLACE_DATA = [
     lat: 1.1034,
     lon: 104.0318,
     category: 'hotel',
-    line: 2,
+    day: 2,
     note: '22–25 Aug · golf view, balcony',
   },
   {
@@ -265,7 +265,7 @@ const PLACE_DATA = [
     lat: 1.1085146,
     lon: 104.0372765,
     category: 'food',
-    line: 2,
+    day: 2,
     note: 'order am · free hotel delivery',
   },
   {
@@ -274,7 +274,7 @@ const PLACE_DATA = [
     lat: 1.1094872,
     lon: 104.0409454,
     category: 'food',
-    line: 2,
+    day: 2,
     note: 'Sundanese',
   },
   {
@@ -283,7 +283,7 @@ const PLACE_DATA = [
     lat: 1.1011,
     lon: 104.0368,
     category: 'shop',
-    line: 2,
+    day: 2,
     note: 'nearest mall to Radisson',
   },
   {
@@ -292,7 +292,7 @@ const PLACE_DATA = [
     lat: 1.1069691,
     lon: 104.0293397,
     category: 'food',
-    line: 2,
+    day: 2,
     note: '500 m from Radisson',
   },
 
@@ -303,7 +303,7 @@ const PLACE_DATA = [
     lat: 1.1276006,
     lon: 104.0465854,
     category: 'food',
-    line: 3,
+    day: 3,
     note: 'Greenland',
   },
   {
@@ -312,7 +312,7 @@ const PLACE_DATA = [
     lat: 1.1203823,
     lon: 104.0483364,
     category: 'food',
-    line: 3,
+    day: 3,
     note: 'nasi padang',
   },
   {
@@ -321,7 +321,7 @@ const PLACE_DATA = [
     lat: 1.1274183,
     lon: 104.0509873,
     category: 'food',
-    line: 3,
+    day: 3,
     note: 'near the mosque',
   },
   {
@@ -330,7 +330,7 @@ const PLACE_DATA = [
     lat: 1.1274,
     lon: 104.0327,
     category: 'food',
-    line: 3,
+    day: 3,
     note: 'pumpkin donuts',
   },
   {
@@ -339,7 +339,7 @@ const PLACE_DATA = [
     lat: 1.1262463,
     lon: 104.0534015,
     category: 'land',
-    line: 3,
+    day: 3,
     note: 'Raja Hamidah',
   },
   {
@@ -348,7 +348,7 @@ const PLACE_DATA = [
     lat: 1.1371,
     lon: 104.0253,
     category: 'food',
-    line: 3,
+    day: 3,
     note: 'luti gendang',
   },
   {
@@ -357,7 +357,7 @@ const PLACE_DATA = [
     lat: 1.1245615,
     lon: 104.0473261,
     category: 'food',
-    line: 3,
+    day: 3,
     note: 'salted cream matcha',
   },
   {
@@ -366,7 +366,7 @@ const PLACE_DATA = [
     lat: 1.125535,
     lon: 104.0412957,
     category: 'food',
-    line: 3,
+    day: 3,
     note: 'sambal lamongan',
   },
   {
@@ -375,7 +375,7 @@ const PLACE_DATA = [
     lat: 1.1223,
     lon: 104.0534,
     category: 'land',
-    line: 3,
+    day: 3,
     note: 'night market in the evening',
   },
 
@@ -386,7 +386,7 @@ const PLACE_DATA = [
     lat: 1.1444,
     lon: 104.0137,
     category: 'food',
-    line: 4,
+    day: 4,
     note: 'steamed brownies, souvenir',
   },
   {
@@ -395,7 +395,7 @@ const PLACE_DATA = [
     lat: 1.1330469,
     lon: 104.0107919,
     category: 'spa',
-    line: 4,
+    day: 4,
     note: 'Muslimah-friendly privacy',
   },
   {
@@ -404,7 +404,7 @@ const PLACE_DATA = [
     lat: 1.135412,
     lon: 104.0073514,
     category: 'food',
-    line: 4,
+    day: 4,
     note: 'Level 3, GBM · long queues',
     insideOf: 'gbm',
   },
@@ -414,7 +414,7 @@ const PLACE_DATA = [
     lat: 1.1627341,
     lon: 104.0455902,
     category: 'dino',
-    line: 4,
+    day: 4,
     note: 'Bengkong · 9am–6pm',
     opening: { opens: hhmm(9), closes: hhmm(18) },
   },
@@ -424,7 +424,7 @@ const PLACE_DATA = [
     lat: 1.1542881,
     lon: 103.99746,
     category: 'spa',
-    line: 4,
+    day: 4,
     note: 'Bayfront, Harbour Bay · 10am–10pm · 4.8★',
     opening: { opens: hhmm(10), closes: hhmm(22) },
   },
@@ -434,7 +434,7 @@ const PLACE_DATA = [
     lat: 1.1339512,
     lon: 103.971781,
     category: 'food',
-    line: 4,
+    day: 4,
     note: 'Sekupang, by the sea · 4.4★ · has a surau',
   },
   {
@@ -443,7 +443,7 @@ const PLACE_DATA = [
     lat: 1.1357,
     lon: 104.0069,
     category: 'shop',
-    line: 4,
+    day: 4,
     note: 'Chikuro · Top 100 · Sociolla · Marugame',
     tenants: [
       { name: 'Chikuro', placeKey: 'chikuro', floor: 'Level 3', note: 'long queues' },
@@ -458,7 +458,7 @@ const PLACE_DATA = [
     lat: 1.1345296,
     lon: 104.0100004,
     category: 'spa',
-    line: 4,
+    day: 4,
     note: 'Penuin',
   },
   {
@@ -467,7 +467,7 @@ const PLACE_DATA = [
     lat: 1.135924,
     lon: 104.0051597,
     category: 'shop',
-    line: 4,
+    day: 4,
     note: 'babyshop with a play area',
   },
   {
@@ -476,7 +476,7 @@ const PLACE_DATA = [
     lat: 1.1491,
     lon: 104.0135,
     category: 'food',
-    line: 4,
+    day: 4,
     note: 'Nagoya branch',
   },
   {
@@ -485,7 +485,7 @@ const PLACE_DATA = [
     lat: 1.1355161,
     lon: 104.0072605,
     category: 'food',
-    line: 4,
+    day: 4,
     note: 'GBM · halal',
     insideOf: 'gbm',
   },
@@ -495,7 +495,7 @@ const PLACE_DATA = [
     lat: 1.1552715,
     lon: 104.0240816,
     category: 'shop',
-    line: 4,
+    day: 4,
     note: 'Bengkong',
   },
   {
@@ -504,7 +504,7 @@ const PLACE_DATA = [
     lat: 1.1467,
     lon: 104.0129,
     category: 'shop',
-    line: 4,
+    day: 4,
     note: 'Renuin on Level 2',
     tenants: [{ name: 'Renuin', placeKey: 'renuin', floor: 'Level 2' }],
   },
@@ -514,7 +514,7 @@ const PLACE_DATA = [
     lat: 1.1419312,
     lon: 104.0123221,
     category: 'food',
-    line: 4,
+    day: 4,
     note: 'Nagoya',
   },
   {
@@ -523,7 +523,7 @@ const PLACE_DATA = [
     lat: 1.1692801,
     lon: 104.0483334,
     category: 'beach',
-    line: 4,
+    day: 4,
     note: 'opens 12:30pm · ~RM12 pax',
     opening: { opens: hhmm(12, 30) },
   },
@@ -533,7 +533,7 @@ const PLACE_DATA = [
     lat: 1.1485757,
     lon: 104.0099615,
     category: 'food',
-    line: 4,
+    day: 4,
     note: 'Nagoya · 4.8★ · nasi padang',
   },
   {
@@ -542,7 +542,7 @@ const PLACE_DATA = [
     lat: 1.1457753,
     lon: 104.0125251,
     category: 'food',
-    line: 4,
+    day: 4,
     note: 'Nagoya Hill L2 · 4.7★ · kids area',
     insideOf: 'nagoyahill',
   },
@@ -552,7 +552,7 @@ const PLACE_DATA = [
     lat: 1.1348364,
     lon: 104.0082777,
     category: 'shop',
-    line: 4,
+    day: 4,
     note: 'L1, GBM · 4.5★',
     insideOf: 'gbm',
   },
@@ -562,7 +562,7 @@ const PLACE_DATA = [
     lat: 1.1356,
     lon: 104.00705,
     category: 'shop',
-    line: 4,
+    day: 4,
     note: 'supermarket inside GBM',
     insideOf: 'gbm',
   },
@@ -574,7 +574,7 @@ const PLACE_DATA = [
     lat: 1.141,
     lon: 104.0028,
     category: 'shop',
-    line: 5,
+    day: 5,
     note: 'Zhuko · Diamond · Kue Jongkong',
     tenants: [{ name: 'Zhuko' }, { name: 'Diamond' }, { name: 'Kue Jongkong' }],
   },
@@ -584,7 +584,7 @@ const PLACE_DATA = [
     lat: 1.1529,
     lon: 103.9997,
     category: 'food',
-    line: 5,
+    day: 5,
     note: 'Harbour Bay branch · opens 6am',
     opening: { opens: hhmm(6) },
   },
@@ -615,18 +615,18 @@ export function requirePlace(key: PlaceKey): Place {
  */
 export const MAP_PLACES: readonly Place[] = PLACES.filter((p) => !p.insideOf);
 
-export function placesOnLine(line: LineId): readonly Place[] {
-  return PLACES.filter((p) => p.line === line);
+export function placesOnDay(line: DayId): readonly Place[] {
+  return PLACES.filter((p) => p.day === line);
 }
 
-export function lineById(id: LineId): Line {
-  const line = LINES.find((l) => l.id === id);
+export function dayById(id: DayId): Day {
+  const line = DAYS.find((l) => l.id === id);
   if (!line) throw new Error(`No line ${id}`);
   return line;
 }
 
-export function lineByDate(isoDate: string): Line | undefined {
-  return LINES.find((l) => l.date === isoDate);
+export function dayByDate(isoDate: string): Day | undefined {
+  return DAYS.find((l) => l.date === isoDate);
 }
 
 /**

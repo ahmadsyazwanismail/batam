@@ -1,4 +1,4 @@
-import { LINES, TRIP, type Line, type MinutesOfDay, type OpeningHours } from '@/data/trip';
+import { DAYS, TRIP, type Day, type MinutesOfDay, type OpeningHours } from '@/data/trip';
 
 /**
  * Batam time.
@@ -52,9 +52,9 @@ export function parseHhmm(hhmm: string): MinutesOfDay {
 // ---------------------------------------------------------------------------
 
 export type TripPhase =
-  | { readonly phase: 'before'; readonly daysUntil: number; readonly firstLine: Line }
-  | { readonly phase: 'during'; readonly line: Line; readonly dayNumber: number }
-  | { readonly phase: 'after'; readonly lastLine: Line };
+  | { readonly phase: 'before'; readonly daysUntil: number; readonly firstDay: Day }
+  | { readonly phase: 'during'; readonly day: Day; readonly dayNumber: number }
+  | { readonly phase: 'after'; readonly lastDay: Day };
 
 function midnightUtc(isoDate: string): number {
   return Date.parse(`${isoDate}T00:00:00Z`);
@@ -62,30 +62,30 @@ function midnightUtc(isoDate: string): number {
 
 export function tripPhase(now: Date = new Date()): TripPhase {
   const today = wibDate(now);
-  const firstLine = LINES[0]!;
-  const lastLine = LINES[LINES.length - 1]!;
+  const firstDay = DAYS[0]!;
+  const lastDay = DAYS[DAYS.length - 1]!;
 
   if (today < TRIP.startDate) {
     const daysUntil = Math.round(
       (midnightUtc(TRIP.startDate) - midnightUtc(today)) / DAY_MS,
     );
-    return { phase: 'before', daysUntil, firstLine };
+    return { phase: 'before', daysUntil, firstDay };
   }
   if (today > TRIP.endDate) {
-    return { phase: 'after', lastLine };
+    return { phase: 'after', lastDay };
   }
 
-  const index = LINES.findIndex((l) => l.date === today);
-  const line = LINES[index] ?? firstLine;
-  return { phase: 'during', line, dayNumber: index + 1 };
+  const index = DAYS.findIndex((l) => l.date === today);
+  const day = DAYS[index] ?? firstDay;
+  return { phase: 'during', day, dayNumber: index + 1 };
 }
 
 /** The line whose colour the app should be wearing right now. */
-export function activeLine(now: Date = new Date()): Line {
+export function activeDay(now: Date = new Date()): Day {
   const phase = tripPhase(now);
-  if (phase.phase === 'during') return phase.line;
-  if (phase.phase === 'before') return phase.firstLine;
-  return phase.lastLine;
+  if (phase.phase === 'during') return phase.day;
+  if (phase.phase === 'before') return phase.firstDay;
+  return phase.lastDay;
 }
 
 export function isOpenAt(

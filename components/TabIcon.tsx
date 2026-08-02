@@ -29,12 +29,13 @@ export function TabIcon({ name }: { name: Tab['icon'] }): JSX.Element {
           <path d="M2.8 5.6 8 3.4v13L2.8 18.6zM8 3.4l6 2.2v13L8 16.4zM14 5.6l5.2-2.2v13L14 18.6z" />
         </svg>
       );
-    case 'lines':
+    case 'days':
+      // A calendar with four marks — the four courses.
       return (
         <svg {...common}>
-          <path d="M11 3.4v15.2" />
-          <circle cx="11" cy="6" r="1.9" />
-          <circle cx="11" cy="16" r="1.9" />
+          <rect x="3.2" y="4.6" width="15.6" height="14" rx="1" />
+          <path d="M3.2 8.6h15.6M7.4 3.2v2.8M14.6 3.2v2.8" />
+          <path d="M7 12h2M13 12h2M7 15.4h2M13 15.4h2" strokeLinecap="round" />
         </svg>
       );
     case 'places':

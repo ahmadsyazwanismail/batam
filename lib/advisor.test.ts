@@ -148,7 +148,7 @@ describe('what it recommends', () => {
 
   it('prefers today’s line', () => {
     const advice = ask({ now: at('2026-08-23', '09:00') });
-    expect(advice.place?.line).toBe(3);
+    expect(advice.place?.day).toBe(3);
   });
 
   it('stops recommending what has been ticked off', () => {

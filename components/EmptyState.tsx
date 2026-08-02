@@ -27,7 +27,7 @@ export function EmptyState({
         <button
           type="button"
           onClick={onAction}
-          className="tap mt-4 border border-hairline border-rule px-4 py-2.5 text-caption font-semibold"
+          className="btn-ghost mx-auto mt-4 px-4 py-2.5 text-caption"
         >
           {actionLabel}
         </button>

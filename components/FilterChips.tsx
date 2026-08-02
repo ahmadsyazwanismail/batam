@@ -1,6 +1,6 @@
 'use client';
 
-import { LINES, type Category, type LineId } from '@/data/trip';
+import { DAYS, type Category, type DayId } from '@/data/trip';
 import { CATEGORY_LABEL } from './CategoryIcon';
 
 /**
@@ -15,9 +15,9 @@ export function FilterChips({
   onToggleCategory,
   categoriesPresent,
 }: {
-  lines: ReadonlySet<LineId>;
+  lines: ReadonlySet<DayId>;
   categories: ReadonlySet<Category>;
-  onToggleLine: (line: LineId) => void;
+  onToggleLine: (line: DayId) => void;
   onToggleCategory: (category: Category) => void;
   categoriesPresent: readonly Category[];
 }): JSX.Element {
@@ -28,7 +28,7 @@ export function FilterChips({
         role="group"
         aria-label="Filter by line"
       >
-        {LINES.map((line) => {
+        {DAYS.map((line) => {
           const on = lines.has(line.id);
           return (
             <button
