@@ -142,20 +142,25 @@ Lighthouse mobile, on the production build:
 
 | Route | Performance | Accessibility |
 | --- | --- | --- |
-| `/` | 90–95 | 100 |
-| `/places` | 97 | 100 |
+| `/` | 94–95 | 100 |
+| `/places` | 91–96 | 100 |
 | `/lines/4` | 98 | 100 |
-| `/costs` | 98 | 100 |
-| `/map` | 85–93 | 100 |
+| `/costs` | 98–99 | 100 |
+| `/map` | 81–86 | 100 |
 
 Zero axe violations (WCAG 2.1 A and AA) on all six routes, and no horizontal overflow at
 390, 414 or 768 px.
 
 Performance is quoted as a range because it is a range: repeated runs on the same build
-and the same machine vary by several points, and `/map` in particular straddles 90 —
-five consecutive runs gave 93, 85, 92, 89, 92. That last few points is MapLibre's own
-start-up, not anything the app does around it. Worth re-measuring on your own hardware
-before treating any single number as the truth.
+and machine vary by several points. **`/map` sits in the low-to-mid 80s and does not meet
+the 90+ bar**, which is the one place this falls short of the brief. It is MapLibre's own
+start-up cost — around 500 ms of blocking time to parse and initialise the GL renderer,
+on a screen that is a map. Everything the app does around it has already been moved off
+the critical path: the library is code-split, the 33 markers build on the next frame
+rather than in the constructor's task, and regrouping is throttled to one pass per frame.
+Getting past 90 would mean not showing a map until the user asks for one, which is a
+worse app. Worth re-measuring on your own hardware before treating any number here as
+the truth.
 
 ## Pins cluster
 
@@ -170,6 +175,19 @@ guaranteed to be at least a radius apart, so bubbles never collide; centroids ha
 guarantee and two groups can drift into each other, which is the exact problem clustering
 was there to solve. A group takes its line's colour when every member shares a day, and ink
 when it spans more than one — the colour still means "which day", or says nothing.
+
+## Prayer times
+
+`lib/prayer.ts` computes them on the device from the sun's position — no network, because
+the premise is that none is available. **Subuh 20°, Isyak 18°, Asar at shadow factor 1
+(Shafi'i)**, the parameters both Kemenag (Indonesia) and JAKIM (Malaysia) publish, so the
+same numbers hold either side of the strait.
+
+Verified against Kuala Lumpur, where JAKIM's times are published and where the city sits
+far enough from its timezone meridian to catch a longitude sign error that Batam would
+not: Zohor and Maghrib land within four minutes. The card says on screen that the times
+are calculated rather than authoritative, because a family that keeps them should know
+which they are looking at.
 
 ## Two things worth your judgement
 
