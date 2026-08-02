@@ -21,6 +21,7 @@ import { runningOrder, type Station } from '@/lib/route';
 import { useLocation } from '@/lib/useLocation';
 import { wibDate } from '@/lib/time';
 import { useHydrated, useTrip } from '@/lib/store';
+import { usePrefersReducedMotion } from '@/lib/motion';
 
 /**
  * Every place, searchable.
@@ -36,7 +37,9 @@ export function PlacesScreen(): JSX.Element {
   const [categories, setCategories] = useState<ReadonlySet<Category>>(new Set());
   const [openKey, setOpenKey] = useState<string | null>(null);
   const listTop = useRef<HTMLParagraphElement | null>(null);
+  const filterBar = useRef<HTMLDivElement | null>(null);
   const filtersTouched = useRef(false);
+  const reduced = usePrefersReducedMotion();
 
   // Promoting the matches to the top only helps if you are looking at the top.
   // Tapping a filter half way down the list would otherwise reorder something
@@ -46,8 +49,16 @@ export function PlacesScreen(): JSX.Element {
       filtersTouched.current = true;
       return;
     }
-    listTop.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [lines, categories]);
+    const anchor = listTop.current;
+    if (!anchor) return;
+    // Not scrollIntoView: the filter bar is sticky, so by the time the scroll
+    // lands it is sitting over the top of the page and swallows the first row.
+    // Measure it rather than guessing — it is two chip rows plus a search box,
+    // and the second row only exists when the list has categories in it.
+    const clearance = (filterBar.current?.offsetHeight ?? 0) + 12;
+    const top = anchor.getBoundingClientRect().top + window.scrollY - clearance;
+    window.scrollTo({ top: Math.max(0, top), behavior: reduced ? 'auto' : 'smooth' });
+  }, [lines, categories, reduced]);
 
   useEffect(() => {
     setNow(new Date());
@@ -123,7 +134,10 @@ export function PlacesScreen(): JSX.Element {
       </div>
 
       {/* Sticky, so the filters stay reachable however far the list runs. */}
-      <div className="sticky top-0 z-30 border-b-hairline border-rule bg-paper/95 px-gutter pb-2.5 pt-2.5 backdrop-blur-sm">
+      <div
+        ref={filterBar}
+        className="sticky top-0 z-30 border-b-hairline border-rule bg-paper/95 px-gutter pb-2.5 pt-2.5 backdrop-blur-sm"
+      >
         <label className="sr-only" htmlFor="place-search">
           Search places
         </label>
@@ -158,7 +172,7 @@ export function PlacesScreen(): JSX.Element {
 
       <p
         ref={listTop}
-        className="numeric scroll-mt-3 px-gutter pb-1 pt-3 text-caption text-muted"
+        className="numeric px-gutter pb-1 pt-3 text-caption text-muted"
       >
         {visible.length} of {MAP_PLACES.length} · {origin.label}
       </p>

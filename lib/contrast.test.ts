@@ -200,14 +200,33 @@ describe('the two themes are actually different', () => {
 });
 
 describe('day colours', () => {
-  it('reads the day name on a selected filter chip', () => {
-    // The chip prints the day's name on its colour at 13px, so this is the
-    // normal-text bar, not the large one. Day one used to be 4.44:1.
+  it('reads the day name in white on a selected filter chip', () => {
+    // The chip prints the day's name at 13px, so this is the normal-text bar,
+    // not the large one. It fills with `textColour` precisely so that one text
+    // colour works on all five: white on the bright `colour` would be 2.68:1
+    // on Crosstown and 3.38:1 on Batam Centre.
     for (const day of DAYS) {
       expect(
-        contrastRatio(day.onColour, day.colour),
+        contrastRatio('#FFFFFF', day.textColour),
         `day ${day.id} ${day.name}`,
       ).toBeGreaterThanOrEqual(AA_NORMAL);
+    }
+  });
+
+  it('keeps a selected chip distinct from the card behind it', () => {
+    // The fill is what separates a chip that is on from one that is off, so it
+    // has to stand off both grounds. Non-text, so the bar is low, but a fill
+    // that vanished into the paper would make the filter state invisible.
+    for (const day of DAYS) {
+      for (const [label, theme] of [
+        ['light', LIGHT],
+        ['dark', DARK],
+      ] as const) {
+        expect(
+          contrastRatio(day.textColour, theme.card),
+          `day ${day.id} on ${label} card`,
+        ).toBeGreaterThan(1.6);
+      }
     }
   });
 
