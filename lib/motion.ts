@@ -33,15 +33,7 @@ export const PAGE_ENTER: Transition = {
   ease: [0.16, 1, 0.3, 1],
 };
 
-/**
- * Leaving one. Half the arrival and opacity only — with `mode="wait"` this
- * time is spent staring at a screen you have already left, so it is the one
- * duration in the app worth minimising rather than shaping.
- */
-export const PAGE_EXIT: Transition = {
-  duration: 0.11,
-  ease: [0.4, 0, 1, 1],
-};
+/* There is no page exit. See components/PageTransition.tsx for why. */
 
 /**
  * List items stagger in from the top.

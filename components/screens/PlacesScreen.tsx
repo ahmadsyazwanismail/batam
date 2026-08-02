@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
 import { Screen } from '@/components/Screen';
 import { LocationBar } from '@/components/LocationBar';
 import { FilterChips } from '@/components/FilterChips';
@@ -22,7 +21,6 @@ import { runningOrder, type Station } from '@/lib/route';
 import { useLocation } from '@/lib/useLocation';
 import { wibDate } from '@/lib/time';
 import { useHydrated, useTrip } from '@/lib/store';
-import { listVariants, stationVariants, usePrefersReducedMotion } from '@/lib/motion';
 
 /**
  * Every place, searchable.
@@ -47,7 +45,6 @@ export function PlacesScreen(): JSX.Element {
   const location = useLocation(now ?? new Date());
   const done = useTrip((s) => s.done);
   const hydrated = useHydrated();
-  const reduced = usePrefersReducedMotion();
 
   const isoDate = now ? wibDate(now) : undefined;
   const origin = location.origin;
@@ -157,11 +154,7 @@ export function PlacesScreen(): JSX.Element {
           }}
         />
       ) : (
-        <motion.ul
-          variants={listVariants}
-          initial={reduced ? false : 'hidden'}
-          animate="show"
-        >
+        <ul>
           {rows.map((row) => (
             <PlaceRow
               key={row.place.key}
@@ -173,7 +166,7 @@ export function PlacesScreen(): JSX.Element {
               onOpen={() => setOpenKey(row.place.key)}
             />
           ))}
-        </motion.ul>
+        </ul>
       )}
 
       <PlaceSheet
@@ -186,6 +179,15 @@ export function PlacesScreen(): JSX.Element {
   );
 }
 
+/**
+ * A plain `li`, not a motion one.
+ *
+ * Thirty-three motion components cost about 120 ms of main thread on a
+ * mid-range phone — measured, repeatably — and bought nothing: each row
+ * carried an explicit `animate` for the dimmed state, which overrode the
+ * stagger variant it was also given, so the stagger never ran. The page
+ * transition already provides the movement, and CSS does the fade for free.
+ */
 function PlaceRow({
   place,
   km,
@@ -202,12 +204,11 @@ function PlaceRow({
   onOpen: () => void;
 }): JSX.Element {
   return (
-    <motion.li
-      variants={stationVariants}
-      // Filtered-out lines fade rather than vanish, and stop taking taps.
-      animate={{ opacity: dimmed ? 0.15 : 1 }}
-      transition={{ duration: 0.2 }}
-      className="rule-b"
+    <li
+      // Filtered-out days fade rather than vanish, and stop taking taps. A CSS
+      // transition does this for nothing; framer-motion charged per row for it.
+      className="rule-b transition-opacity duration-200"
+      style={{ opacity: dimmed ? 0.15 : 1 }}
       aria-hidden={dimmed}
     >
       <button
@@ -236,6 +237,6 @@ function PlaceRow({
           <span className="mt-0.5 block text-caption text-muted">{verdict}</span>
         </span>
       </button>
-    </motion.li>
+    </li>
   );
 }

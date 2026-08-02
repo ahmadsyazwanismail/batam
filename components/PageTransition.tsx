@@ -2,8 +2,8 @@
 
 import { useRef, type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
-import { AnimatePresence, motion } from 'framer-motion';
-import { PAGE_ENTER, PAGE_EXIT, usePrefersReducedMotion } from '@/lib/motion';
+import { motion } from 'framer-motion';
+import { PAGE_ENTER, usePrefersReducedMotion } from '@/lib/motion';
 import { tabIndex } from '@/lib/nav';
 
 /** "/days/4" is two deep, "/days" is one, "/" is nought. */
@@ -14,15 +14,24 @@ function depth(pathname: string): number {
 /**
  * Moving between screens.
  *
- * Two journeys, so two gestures. Along the tab bar it slides sideways in the
- * direction you moved, because the five screens are a row. Opening a day from
- * the list comes up from below, because that is going into something rather
- * than across it.
+ * Only the arrival is animated, and that is deliberate rather than lazy.
  *
- * The old version ran both halves at 220 ms under `mode="wait"`, so every tap
- * cost 440 ms — a screen leaving in full before the next began to arrive.
- * Leaving is now a fast fade and nothing else; arriving is the half worth
- * watching.
+ * This used to run an exit through `AnimatePresence mode="wait"`, which looked
+ * right and was not: `usePathname` updates the moment you tap, but the
+ * `children` this template is handed have *already* been swapped by the router.
+ * So the element that was supposedly playing the old page out was in fact
+ * holding the new page's content, and the sequence on screen was — new content
+ * appears, fades to fully invisible, fades back in. Traced at 40 ms intervals
+ * it went 0.81, 0.28, 0.00, 0.74, 1.00. That flash is what a page change felt
+ * like, and no amount of tuning the durations was going to fix it, because the
+ * bug was the structure.
+ *
+ * Keying a plain motion.div on the pathname re-mounts it on every navigation,
+ * so the new screen simply starts slightly offset and transparent and settles.
+ * Opacity only ever goes up.
+ *
+ * The direction still says something: sideways along the tab bar in the way you
+ * moved, upward when you open a day out of the list, downward coming back.
  */
 export function PageTransition({ children }: { children: ReactNode }): JSX.Element {
   const pathname = usePathname();
@@ -40,22 +49,15 @@ export function PageTransition({ children }: { children: ReactNode }): JSX.Eleme
   if (reduced) return <>{children}</>;
 
   return (
-    <AnimatePresence mode="wait" initial={false}>
-      <motion.div
-        key={pathname}
-        initial={
-          sideways
-            ? { opacity: 0, x: 20 * direction }
-            : { opacity: 0, y: 12 * direction }
-        }
-        animate={{ opacity: 1, x: 0, y: 0 }}
-        // Opacity only on the way out. Sliding the old screen away as well is
-        // what made a tab change feel like it took half a second.
-        exit={{ opacity: 0, transition: PAGE_EXIT }}
-        transition={PAGE_ENTER}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
+    <motion.div
+      key={pathname}
+      initial={
+        sideways ? { opacity: 0, x: 18 * direction } : { opacity: 0, y: 10 * direction }
+      }
+      animate={{ opacity: 1, x: 0, y: 0 }}
+      transition={PAGE_ENTER}
+    >
+      {children}
+    </motion.div>
   );
 }
