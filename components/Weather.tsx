@@ -70,7 +70,18 @@ export function WeatherCard(): JSX.Element | null {
   const onTheTrip = DAYS.some((d) => d.date === today);
   const now = onTheTrip ? forDate(forecast, today) : null;
 
-  if (weather.status === 'loading') return null;
+  // Rendering nothing while the request is in flight meant the section simply
+  // was not there for up to eight seconds — long enough to look like a feature
+  // that had not been built. The heading is always present; only what sits
+  // under it changes.
+  if (weather.status === 'loading') {
+    return (
+      <section className="px-gutter pt-7">
+        <h2 className="eyebrow">Weather</h2>
+        <p className="mt-1.5 text-caption text-muted">Checking the forecast…</p>
+      </section>
+    );
+  }
 
   if (weather.status === 'unavailable') {
     return (

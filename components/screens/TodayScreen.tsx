@@ -139,6 +139,8 @@ function BeforeTheTrip({
         </Card>
       </div>
 
+      <WeatherCard />
+
       <SectionHeading>Before you go</SectionHeading>
       <motion.ul variants={listVariants} initial="hidden" animate="show">
         {WARNINGS.map((w) => (
@@ -155,8 +157,6 @@ function BeforeTheTrip({
 
       <SectionHeading>Packing</SectionHeading>
       <PackingList />
-
-      <WeatherCard />
 
       <SectionHeading>Prayer times on Batam</SectionHeading>
       <div className="px-gutter">
