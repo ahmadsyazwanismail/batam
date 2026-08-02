@@ -21,11 +21,26 @@ export function Splash(): JSX.Element | null {
   useEffect(() => {
     if (reduced) return;
     if (sessionStorage.getItem(SEEN)) return;
-    sessionStorage.setItem(SEEN, '1');
+
     setShowing(true);
-    const id = window.setTimeout(() => setShowing(false), 1500);
+    // The flag is set when the timer *finishes*, not when it starts. Setting it
+    // up front means a cleanup that cancels the timer — which React's dev-mode
+    // double-invoke does on every mount — leaves the flag set, so the re-run
+    // returns early, the timer is never re-armed, and the splash covers the app
+    // forever. Ask how I know.
+    const id = window.setTimeout(() => {
+      sessionStorage.setItem(SEEN, '1');
+      setShowing(false);
+    }, 1500);
     return () => window.clearTimeout(id);
   }, [reduced]);
+
+  // Belt and braces: a full-screen overlay must never be able to trap the app,
+  // so it is always dismissable by touching it.
+  const dismiss = () => {
+    sessionStorage.setItem(SEEN, '1');
+    setShowing(false);
+  };
 
   return (
     <AnimatePresence>
@@ -35,6 +50,7 @@ export function Splash(): JSX.Element | null {
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.35 }}
+          onPointerDown={dismiss}
           aria-hidden
         >
           <div className="w-40">
