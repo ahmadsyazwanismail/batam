@@ -165,7 +165,12 @@ export const DAYS: readonly Day[] = [
     date: '2026-08-21',
     weekday: 'Fri',
     name: 'Arrival',
-    colour: '#D93F3F',
+    // Specified as #D93F3F. White on that is 4.44:1 — a fraction under the
+    // normal-text bar, which matters because the day filter chips print the
+    // day's name on this colour at 13px. Four steps darker clears it at 4.60
+    // and is indistinguishable beside the original. lib/contrast.test.ts holds
+    // every day colour to that bar now, which it did not before.
+    colour: '#D53D3D',
     onColour: '#FFFFFF',
     textColour: '#C53939',
     base: 'harris',

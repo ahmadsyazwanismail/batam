@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import maplibregl, { type Map as MapLibreMap, type Marker } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { dayById, MAP_PLACES, type Category, type DayId, type Place } from '@/data/trip';
-import { MAP_BOUNDS, MAP_STYLE } from '@/lib/mapStyle';
+import { MAP_BOUNDS, mapStyle } from '@/lib/mapStyle';
 import { clusterByScreen, CLUSTER_RADIUS_PX, type Cluster, type ScreenPoint } from '@/lib/cluster';
 import type { LatLon } from '@/lib/geo';
 
@@ -17,6 +17,18 @@ import type { LatLon } from '@/lib/geo';
  * decorative — colouring by category on one screen would quietly break that.
  * The glyph carries the category instead, which is what the colour was for.
  */
+/**
+ * The theme, right now. The toggle writes `data-theme` on the document; with
+ * no attribute the OS decides, exactly as the stylesheet does.
+ */
+function isDark(): boolean {
+  if (typeof document === 'undefined') return false;
+  const set = document.documentElement.getAttribute('data-theme');
+  if (set === 'dark') return true;
+  if (set === 'light') return false;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
 export function MapCanvas({
   selectedDays,
   selectedCategories,
@@ -49,9 +61,10 @@ export function MapCanvas({
   useEffect(() => {
     if (!container.current || map.current) return;
 
+
     const instance = new maplibregl.Map({
       container: container.current,
-      style: MAP_STYLE,
+      style: mapStyle(isDark()),
       bounds: MAP_BOUNDS,
       fitBoundsOptions: { padding: 36 },
       attributionControl: { compact: true },
@@ -63,6 +76,19 @@ export function MapCanvas({
     instance.touchZoomRotate.disableRotation();
     instance.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     map.current = instance;
+
+    // Follow the theme. Watched two ways because the toggle sets an attribute
+    // and "Auto" leaves the OS in charge.
+    const repaint = (): void => {
+      instance.setStyle(mapStyle(isDark()));
+    };
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    media.addEventListener('change', repaint);
+    const watcher = new MutationObserver(repaint);
+    watcher.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
 
     // Building 33 markers is a few milliseconds of DOM work, but it lands in
     // the same long task as MapLibre's own start-up and pushes total blocking
@@ -95,6 +121,8 @@ export function MapCanvas({
     });
 
     return () => {
+      media.removeEventListener('change', repaint);
+      watcher.disconnect();
       cancelAnimationFrame(frame);
       created.forEach(({ marker }) => marker.remove());
       created.clear();
@@ -312,8 +340,8 @@ function clusterLabel(cluster: Cluster): string {
 }
 
 function buildCluster(cluster: Cluster): HTMLElement {
-  const colour = cluster.day ? dayById(cluster.day).colour : '#16181C';
-  const onColour = cluster.day ? dayById(cluster.day).onColour : '#FBFAF6';
+  const colour = cluster.day ? dayById(cluster.day).colour : 'var(--ink)';
+  const onColour = cluster.day ? dayById(cluster.day).onColour : 'var(--card)';
 
   const el = document.createElement('button');
   el.type = 'button';
@@ -333,7 +361,7 @@ function buildCluster(cluster: Cluster): HTMLElement {
     <span style="display:flex;align-items:center;justify-content:center;
       width:34px;height:34px;border-radius:9999px;background:${colour};
       color:${onColour};font-weight:700;font-size:15px;line-height:1;
-      font-variant-numeric:tabular-nums;box-shadow:0 0 0 3px #F4F3EE"
+      font-variant-numeric:tabular-nums;box-shadow:0 0 0 3px var(--paper)"
       aria-hidden="true">${cluster.keys.length}</span>`;
   return el;
 }
@@ -343,10 +371,10 @@ function buildYou(): HTMLElement {
   el.style.cssText = 'position:relative;width:18px;height:18px';
   el.innerHTML = `
     <span data-halo style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-      background:#16181C22;border:1px solid #16181C44;border-radius:9999px;width:40px;height:40px"></span>
+      background:rgb(var(--ink-rgb)/0.13);border:1px solid rgb(var(--ink-rgb)/0.27);border-radius:9999px;width:40px;height:40px"></span>
     <span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-      width:16px;height:16px;border-radius:9999px;background:#16181C;
-      box-shadow:0 0 0 3px #FBFAF6"></span>`;
+      width:16px;height:16px;border-radius:9999px;background:var(--ink);
+      box-shadow:0 0 0 3px var(--card)"></span>`;
   el.setAttribute('aria-hidden', 'true');
   return el;
 }

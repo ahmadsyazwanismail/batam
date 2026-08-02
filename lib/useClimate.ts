@@ -60,38 +60,53 @@ export function useClimate(enabled: boolean): ClimateState {
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 12_000);
 
-    Promise.all(
-      archiveUrls(tripYear).map((url) =>
-        fetch(url, { signal: controller.signal })
-          .then((r) => (r.ok ? r.json() : null))
-          .then(parseArchiveYear)
-          // One year missing is not a reason to lose the other nine.
-          .catch(() => []),
-      ),
-    )
-      .then((years) => {
-        if (cancelled) return;
-        const climate = summarise(years, tripYear, Date.now());
-        if (!climate) {
-          setState({ status: 'unavailable' });
-          return;
-        }
-        try {
-          window.localStorage.setItem(CACHE_KEY, JSON.stringify(climate));
-        } catch {
-          // Fine. It will be fetched again next time.
-        }
-        setState({ status: 'ready', climate });
-      })
-      .catch(() => {
-        if (!cancelled) setState({ status: 'unavailable' });
-      })
-      .finally(() => window.clearTimeout(timeout));
+    // Ten requests, for a row of text that fills a gap. Firing them during
+    // load cost the Today screen about eight Lighthouse points, and on a real
+    // phone it is ten connections competing with the page you asked for. It
+    // waits for the browser to be idle instead — the answer is a decade old,
+    // so a second's delay costs nothing.
+    const start = (): void => {
+      Promise.all(
+        archiveUrls(tripYear).map((url) =>
+          fetch(url, { signal: controller.signal })
+            .then((r) => (r.ok ? r.json() : null))
+            .then(parseArchiveYear)
+            // One year missing is not a reason to lose the other nine.
+            .catch(() => []),
+        ),
+      )
+        .then((years) => {
+          if (cancelled) return;
+          const climate = summarise(years, tripYear, Date.now());
+          if (!climate) {
+            setState({ status: 'unavailable' });
+            return;
+          }
+          try {
+            window.localStorage.setItem(CACHE_KEY, JSON.stringify(climate));
+          } catch {
+            // Fine. It will be fetched again next time.
+          }
+          setState({ status: 'ready', climate });
+        })
+        .catch(() => {
+          if (!cancelled) setState({ status: 'unavailable' });
+        })
+        .finally(() => window.clearTimeout(timeout));
+    };
+
+    // Safari has no requestIdleCallback; a short timer is close enough.
+    const canIdle = typeof window.requestIdleCallback === 'function';
+    const idle = canIdle
+      ? window.requestIdleCallback(start, { timeout: 3000 })
+      : window.setTimeout(start, 1200);
 
     return () => {
       cancelled = true;
       controller.abort();
       window.clearTimeout(timeout);
+      if (canIdle) window.cancelIdleCallback(idle);
+      else window.clearTimeout(idle);
     };
   }, [enabled]);
 

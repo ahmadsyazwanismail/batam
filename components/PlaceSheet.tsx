@@ -69,7 +69,7 @@ export function PlaceSheet({
             </Row>
             {course && (
               <Row label="Course">
-                <span style={{ color: course.meal.textColour }}>{course.meal.name}</span>
+                <span style={{ color: `var(--meal-${course.meal.key}-text)` }}>{course.meal.name}</span>
               </Row>
             )}
             {station.fixedTime && <Row label="Open">{station.fixedTime.label}</Row>}

@@ -3,6 +3,7 @@ import { Barlow_Condensed, Inter } from 'next/font/google';
 import './globals.css';
 import { TabBar } from '@/components/TabBar';
 import { ServiceWorker } from '@/components/ServiceWorker';
+import { THEME_SCRIPT } from '@/components/ThemeToggle';
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { Splash } from '@/components/Splash';
 import { TRIP } from '@/data/trip';
@@ -47,7 +48,8 @@ export const viewport: Viewport = {
   // The map pans and zooms; the rest of the app must still be zoomable, so
   // user-scalable is left alone.
   viewportFit: 'cover',
-  themeColor: '#C2410C',
+  // Overwritten at runtime by the theme toggle; this is the light default.
+  themeColor: '#FBF3E6',
 };
 
 export default function RootLayout({
@@ -57,6 +59,9 @@ export default function RootLayout({
 }): JSX.Element {
   return (
     <html lang="en" className={`${inter.variable} ${signboard.variable}`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body>
         <ServiceWorker />
         <Splash />

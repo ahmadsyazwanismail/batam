@@ -16,19 +16,24 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Makan. Warm paper, roasted ink, and a sambal accent. Every value
-        // here was measured before it was chosen — see lib/contrast.test.ts.
-        paper: '#FBF3E6',
-        card: '#FFFDF8',
-        ink: '#2A1A10',
-        muted: '#7A6250',
-        rule: '#E7D8BE',
-        accent: '#C2410C',
+        // Makan. Warm paper, roasted ink, and a sambal accent.
+        //
+        // These were literal hex until dark mode, which meant `bg-paper` stayed
+        // cream whatever the theme said. They now point at the custom
+        // properties in globals.css, which are the single place either theme is
+        // written down. The `<alpha-value>` form keeps `bg-card/95` working.
+        paper: 'rgb(var(--paper-rgb) / <alpha-value>)',
+        card: 'rgb(var(--card-rgb) / <alpha-value>)',
+        ink: 'rgb(var(--ink-rgb) / <alpha-value>)',
+        muted: 'rgb(var(--muted-rgb) / <alpha-value>)',
+        rule: 'rgb(var(--rule-rgb) / <alpha-value>)',
+        accent: 'rgb(var(--accent-rgb) / <alpha-value>)',
+        'on-accent': 'rgb(var(--on-accent-rgb) / <alpha-value>)',
         meal: {
-          sarapan: '#E39B3C',
-          tengahari: '#C2410C',
-          petang: '#7E9A4E',
-          malam: '#6B4A8C',
+          sarapan: 'rgb(var(--meal-sarapan-rgb) / <alpha-value>)',
+          tengahari: 'rgb(var(--meal-tengahari-rgb) / <alpha-value>)',
+          petang: 'rgb(var(--meal-petang-rgb) / <alpha-value>)',
+          malam: 'rgb(var(--meal-malam-rgb) / <alpha-value>)',
         },
         line: {
           1: '#D93F3F',

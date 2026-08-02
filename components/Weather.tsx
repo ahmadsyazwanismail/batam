@@ -103,19 +103,6 @@ export function WeatherCard(): JSX.Element | null {
   const onTheTrip = DAYS.some((d) => d.date === today);
   const now = onTheTrip ? forDate(forecast, today) : null;
 
-  // Rendering nothing while the request is in flight meant the section simply
-  // was not there for up to eight seconds — long enough to look like a feature
-  // that had not been built. The heading is always present; only what sits
-  // under it changes.
-  if (weather.status === 'loading') {
-    return (
-      <section className="px-gutter pt-7">
-        <h2 className="eyebrow">Weather</h2>
-        <p className="mt-1.5 text-caption text-muted">Checking the forecast…</p>
-      </section>
-    );
-  }
-
   // A failed forecast used to end the section here, which also threw away the
   // history — and the history is exactly what is worth having when the
   // forecast cannot be reached. Only bail out when there is nothing of either.
@@ -150,6 +137,10 @@ export function WeatherCard(): JSX.Element | null {
         </div>
       )}
 
+      {/* Always five rows, from the first paint. This used to render one line
+          of "Checking the forecast…" and then become a five-row table, which
+          measured 0.124 of layout shift — the block below it visibly jumped
+          down the page a second after you opened the app. */}
       <ul className="mt-2 overflow-hidden rounded-md border border-hairline border-rule bg-card [&>li:last-child]:border-b-0">
         {DAYS.map((day) => {
           const w = forDate(forecast, day.date);
@@ -177,7 +168,9 @@ export function WeatherCard(): JSX.Element | null {
                 </span>
               ) : (
                 <span className="flex-1 text-caption text-muted">
-                  {climate.status === 'loading' ? 'Looking it up…' : 'Nothing recorded'}
+                  {weather.status === 'loading' || climate.status === 'loading'
+                    ? 'Checking…'
+                    : 'Nothing recorded'}
                 </span>
               )}
             </li>

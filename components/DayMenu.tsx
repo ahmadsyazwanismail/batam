@@ -131,7 +131,7 @@ function CourseBlock({
   return (
     <motion.section variants={stationVariants} className="px-gutter pt-6">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="eyebrow" style={{ color: meal.textColour }}>
+        <h2 className="eyebrow" style={{ color: `var(--meal-${meal.key}-text)` }}>
           {meal.name}
         </h2>
         <span className="numeric text-eyebrow font-bold uppercase text-muted">
@@ -144,7 +144,7 @@ function CourseBlock({
           <span
             aria-hidden
             className="h-2 w-2 shrink-0 rounded-full"
-            style={{ backgroundColor: meal.colour }}
+            style={{ backgroundColor: `var(--meal-${meal.key})` }}
           />
           {included}
         </p>
@@ -185,7 +185,7 @@ function CourseBlock({
                   target="_blank"
                   rel="noreferrer"
                   className="btn w-full border-t-hairline border-rule py-2.5 text-caption"
-                  style={{ color: meal.textColour }}
+                  style={{ color: `var(--meal-${meal.key}-text)` }}
                 >
                   Open in Google Maps
                 </a>

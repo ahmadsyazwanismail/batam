@@ -3,25 +3,157 @@
 @tailwind utilities;
 
 @layer base {
+  /* Both themes also live in lib/theme.ts, and lib/contrast.test.ts reads this
+     file and fails if the two drift apart. Do not edit one without the other.
+
+     Each colour is stored twice: `--x-rgb` as bare channels, so Tailwind's
+     opacity modifiers (`bg-card/95`) work, and `--x` as a real colour, so
+     inline `style={{ color: 'var(--accent)' }}` keeps working. */
   :root {
-    --paper: #fbf3e6;
-    --card: #fffdf8;
-    --ink: #2a1a10;
-    --accent: #c2410c;
-    --muted: #7a6250;
-    --rule: #e7d8be;
+    --paper-rgb: 251 243 230;
+    --paper: rgb(var(--paper-rgb));
+    --card-rgb: 255 253 248;
+    --card: rgb(var(--card-rgb));
+    --ink-rgb: 42 26 16;
+    --ink: rgb(var(--ink-rgb));
+    --muted-rgb: 122 98 80;
+    --muted: rgb(var(--muted-rgb));
+    --rule-rgb: 231 216 190;
+    --rule: rgb(var(--rule-rgb));
+    --accent-rgb: 194 65 12;
+    --accent: rgb(var(--accent-rgb));
+    --on-accent-rgb: 255 255 255;
+    --on-accent: rgb(var(--on-accent-rgb));
+    --meal-sarapan-rgb: 227 155 60;
+    --meal-sarapan: rgb(var(--meal-sarapan-rgb));
+    --meal-tengahari-rgb: 194 65 12;
+    --meal-tengahari: rgb(var(--meal-tengahari-rgb));
+    --meal-petang-rgb: 126 154 78;
+    --meal-petang: rgb(var(--meal-petang-rgb));
+    --meal-malam-rgb: 107 74 140;
+    --meal-malam: rgb(var(--meal-malam-rgb));
+    --meal-sarapan-text-rgb: 145 99 38;
+    --meal-sarapan-text: rgb(var(--meal-sarapan-text-rgb));
+    --meal-tengahari-text-rgb: 194 65 12;
+    --meal-tengahari-text: rgb(var(--meal-tengahari-text-rgb));
+    --meal-petang-text-rgb: 96 117 59;
+    --meal-petang-text: rgb(var(--meal-petang-text-rgb));
+    --meal-malam-text-rgb: 107 74 140;
+    --meal-malam-text: rgb(var(--meal-malam-text-rgb));
+    --shadow-modal: 0 18px 50px rgba(42, 26, 16, 0.28);
+    color-scheme: light;
+  }
 
-    --meal-sarapan: #e39b3c;
-    --meal-tengahari: #c2410c;
-    --meal-petang: #7e9a4e;
-    --meal-malam: #6b4a8c;
+  /* Dark is not an inversion. Inverted cream goes blue-grey and cold, which is
+     wrong for an app about food, so these grounds keep the brown in them and
+     every foreground was re-derived against them rather than reused. A warm
+     shadow is also invisible on a warm-black ground, hence the second one. */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper-rgb: 23 17 12;
+      --paper: rgb(var(--paper-rgb));
+      --card-rgb: 33 25 19;
+      --card: rgb(var(--card-rgb));
+      --ink-rgb: 244 234 219;
+      --ink: rgb(var(--ink-rgb));
+      --muted-rgb: 183 161 139;
+      --muted: rgb(var(--muted-rgb));
+      --rule-rgb: 58 44 33;
+      --rule: rgb(var(--rule-rgb));
+      --accent-rgb: 255 138 91;
+      --accent: rgb(var(--accent-rgb));
+      --on-accent-rgb: 26 18 12;
+      --on-accent: rgb(var(--on-accent-rgb));
+      --meal-sarapan-rgb: 232 166 75;
+      --meal-sarapan: rgb(var(--meal-sarapan-rgb));
+      --meal-tengahari-rgb: 255 138 91;
+      --meal-tengahari: rgb(var(--meal-tengahari-rgb));
+      --meal-petang-rgb: 159 190 106;
+      --meal-petang: rgb(var(--meal-petang-rgb));
+      --meal-malam-rgb: 179 146 216;
+      --meal-malam: rgb(var(--meal-malam-rgb));
+      --meal-sarapan-text-rgb: 232 166 75;
+      --meal-sarapan-text: rgb(var(--meal-sarapan-text-rgb));
+      --meal-tengahari-text-rgb: 255 138 91;
+      --meal-tengahari-text: rgb(var(--meal-tengahari-text-rgb));
+      --meal-petang-text-rgb: 169 199 118;
+      --meal-petang-text: rgb(var(--meal-petang-text-rgb));
+      --meal-malam-text-rgb: 191 161 224;
+      --meal-malam-text: rgb(var(--meal-malam-text-rgb));
+      --shadow-modal: 0 18px 50px rgba(0, 0, 0, 0.6);
+      color-scheme: dark;
+    }
+  }
 
-    /* The five day colours live in data/trip.ts and are read straight off it
-       by the only thing that still uses them — the day filter chips. They were
-       also being painted onto a --line custom property and used for checkboxes,
-       selection, the location bar and the theme-colour meta, which meant the
-       app's chrome changed colour by day while the accent beside it did not. */
+  /* The toggle has to beat the media query in *both* directions, so light is
+     written out again rather than left to the cascade. */
+  :root[data-theme='dark'] {
+    --paper-rgb: 23 17 12;
+    --paper: rgb(var(--paper-rgb));
+    --card-rgb: 33 25 19;
+    --card: rgb(var(--card-rgb));
+    --ink-rgb: 244 234 219;
+    --ink: rgb(var(--ink-rgb));
+    --muted-rgb: 183 161 139;
+    --muted: rgb(var(--muted-rgb));
+    --rule-rgb: 58 44 33;
+    --rule: rgb(var(--rule-rgb));
+    --accent-rgb: 255 138 91;
+    --accent: rgb(var(--accent-rgb));
+    --on-accent-rgb: 26 18 12;
+    --on-accent: rgb(var(--on-accent-rgb));
+    --meal-sarapan-rgb: 232 166 75;
+    --meal-sarapan: rgb(var(--meal-sarapan-rgb));
+    --meal-tengahari-rgb: 255 138 91;
+    --meal-tengahari: rgb(var(--meal-tengahari-rgb));
+    --meal-petang-rgb: 159 190 106;
+    --meal-petang: rgb(var(--meal-petang-rgb));
+    --meal-malam-rgb: 179 146 216;
+    --meal-malam: rgb(var(--meal-malam-rgb));
+    --meal-sarapan-text-rgb: 232 166 75;
+    --meal-sarapan-text: rgb(var(--meal-sarapan-text-rgb));
+    --meal-tengahari-text-rgb: 255 138 91;
+    --meal-tengahari-text: rgb(var(--meal-tengahari-text-rgb));
+    --meal-petang-text-rgb: 169 199 118;
+    --meal-petang-text: rgb(var(--meal-petang-text-rgb));
+    --meal-malam-text-rgb: 191 161 224;
+    --meal-malam-text: rgb(var(--meal-malam-text-rgb));
+    --shadow-modal: 0 18px 50px rgba(0, 0, 0, 0.6);
+    color-scheme: dark;
+  }
 
+  :root[data-theme='light'] {
+    --paper-rgb: 251 243 230;
+    --paper: rgb(var(--paper-rgb));
+    --card-rgb: 255 253 248;
+    --card: rgb(var(--card-rgb));
+    --ink-rgb: 42 26 16;
+    --ink: rgb(var(--ink-rgb));
+    --muted-rgb: 122 98 80;
+    --muted: rgb(var(--muted-rgb));
+    --rule-rgb: 231 216 190;
+    --rule: rgb(var(--rule-rgb));
+    --accent-rgb: 194 65 12;
+    --accent: rgb(var(--accent-rgb));
+    --on-accent-rgb: 255 255 255;
+    --on-accent: rgb(var(--on-accent-rgb));
+    --meal-sarapan-rgb: 227 155 60;
+    --meal-sarapan: rgb(var(--meal-sarapan-rgb));
+    --meal-tengahari-rgb: 194 65 12;
+    --meal-tengahari: rgb(var(--meal-tengahari-rgb));
+    --meal-petang-rgb: 126 154 78;
+    --meal-petang: rgb(var(--meal-petang-rgb));
+    --meal-malam-rgb: 107 74 140;
+    --meal-malam: rgb(var(--meal-malam-rgb));
+    --meal-sarapan-text-rgb: 145 99 38;
+    --meal-sarapan-text: rgb(var(--meal-sarapan-text-rgb));
+    --meal-tengahari-text-rgb: 194 65 12;
+    --meal-tengahari-text: rgb(var(--meal-tengahari-text-rgb));
+    --meal-petang-text-rgb: 96 117 59;
+    --meal-petang-text: rgb(var(--meal-petang-text-rgb));
+    --meal-malam-text-rgb: 107 74 140;
+    --meal-malam-text: rgb(var(--meal-malam-text-rgb));
+    --shadow-modal: 0 18px 50px rgba(42, 26, 16, 0.28);
     color-scheme: light;
   }
 
@@ -65,7 +197,9 @@
 
   ::selection {
     background-color: var(--accent);
-    color: #fff;
+    /* Was `#fff`, which is 5.2:1 on the light accent and 2.2:1 on the dark
+       one — selected text became unreadable the moment the theme flipped. */
+    color: var(--on-accent);
   }
 }
 
@@ -138,9 +272,46 @@
   background-position: center !important;
 }
 .maplibregl-ctrl-group {
-  border-radius: 0 !important;
+  /* Rounded like every other panel; square was left over from the signage era. */
+  border-radius: 12px !important;
+  overflow: hidden;
   border: 1px solid var(--rule);
   box-shadow: none !important;
+}
+
+/* MapLibre's own chrome ships white and stays white, which on a dark map is
+   two glaring rectangles. It gets the app's surfaces instead — both here and
+   the attribution pill, which is the other one. */
+.maplibregl-ctrl-group,
+.maplibregl-ctrl-attrib.maplibregl-compact {
+  background: var(--card) !important;
+}
+.maplibregl-ctrl-group button {
+  background-color: var(--card) !important;
+}
+.maplibregl-ctrl-group button + button {
+  border-top: 1px solid var(--rule) !important;
+}
+.maplibregl-ctrl-group button:hover {
+  background-color: var(--paper) !important;
+}
+.maplibregl-ctrl-attrib,
+.maplibregl-ctrl-attrib a {
+  color: var(--muted) !important;
+}
+.maplibregl-ctrl-attrib.maplibregl-compact {
+  border-radius: 12px !important;
+}
+/* The +, − and i glyphs are black PNGs; on a dark surface they need inverting. */
+:root[data-theme='dark'] .maplibregl-ctrl-icon,
+:root[data-theme='dark'] .maplibregl-ctrl-attrib-button {
+  filter: invert(1) brightness(1.6);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .maplibregl-ctrl-icon,
+  :root:not([data-theme='light']) .maplibregl-ctrl-attrib-button {
+    filter: invert(1) brightness(1.6);
+  }
 }
 
 /* Every animation in the app is opt-out, in one place. */

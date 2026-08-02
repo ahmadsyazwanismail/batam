@@ -38,7 +38,7 @@ export function DaysScreen(): JSX.Element {
 
           const courses = menu.courses.map((c) => ({
             key: c.meal.key,
-            colour: c.meal.colour,
+            colour: `var(--meal-${c.meal.key})`,
             filled:
               c.places.length > 0 &&
               hydrated &&

@@ -67,7 +67,7 @@ export function DayComplete({ line }: { line: DayId }): JSX.Element | null {
             initial={{ scale: 0.9, y: 8 }}
             animate={{ scale: 1, y: 0 }}
             transition={SPRING}
-            className="flex w-full max-w-[19rem] flex-col items-center rounded-sheet border border-hairline border-rule bg-card px-6 pb-7 pt-3 shadow-[0_18px_50px_rgba(42,26,16,0.28)]"
+            className="flex w-full max-w-[19rem] flex-col items-center rounded-sheet border border-hairline border-rule bg-card px-6 pb-7 pt-3 shadow-[var(--shadow-modal)]"
           >
             <div className="w-36">
               <LottieMoment

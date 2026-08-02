@@ -13,36 +13,50 @@ import type { StyleSpecification } from 'maplibre-gl';
 const CARTO_ATTRIBUTION =
   '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, © <a href="https://carto.com/attributions">CARTO</a>';
 
-export const MAP_STYLE: StyleSpecification = {
-  version: 8,
-  sources: {
-    carto: {
-      type: 'raster',
-      tiles: [
-        'https://a.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}@2x.png',
-        'https://b.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}@2x.png',
-        'https://c.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}@2x.png',
-      ],
-      tileSize: 256,
-      maxzoom: 19,
-      attribution: CARTO_ATTRIBUTION,
+/**
+ * CARTO ships a matching dark basemap, so the map follows the theme rather
+ * than being a rectangle of daylight in the middle of a dark app. Both sets
+ * cache in the same service-worker tile store, which is capped, so switching
+ * theme costs downloads once and nothing after.
+ */
+function style(variant: 'light_all' | 'dark_all', backdrop: string): StyleSpecification {
+  return {
+    version: 8,
+    sources: {
+      carto: {
+        type: 'raster',
+        tiles: ['a', 'b', 'c'].map(
+          (host) => `https://${host}.basemaps.cartocdn.com/rastertiles/${variant}/{z}/{x}/{y}@2x.png`,
+        ),
+        tileSize: 256,
+        maxzoom: 19,
+        attribution: CARTO_ATTRIBUTION,
+      },
     },
-  },
-  layers: [
-    {
-      id: 'background',
-      type: 'background',
-      // Paper, so an unloaded tile reads as part of the app rather than a hole.
-      paint: { 'background-color': '#F4F3EE' },
-    },
-    {
-      id: 'carto',
-      type: 'raster',
-      source: 'carto',
-      paint: { 'raster-saturation': -0.35, 'raster-contrast': -0.05 },
-    },
-  ],
-};
+    layers: [
+      {
+        id: 'background',
+        type: 'background',
+        // The app's own ground, so an unloaded tile reads as part of the page
+        // rather than as a hole in it.
+        paint: { 'background-color': backdrop },
+      },
+      {
+        id: 'carto',
+        type: 'raster',
+        source: 'carto',
+        paint: { 'raster-saturation': -0.35, 'raster-contrast': -0.05 },
+      },
+    ],
+  };
+}
+
+export const MAP_STYLE = style('light_all', '#FBF3E6');
+export const MAP_STYLE_DARK = style('dark_all', '#17110C');
+
+export function mapStyle(dark: boolean): StyleSpecification {
+  return dark ? MAP_STYLE_DARK : MAP_STYLE;
+}
 
 /** Batam, framed so all 33 pins fit on a 390px screen. */
 export const MAP_BOUNDS: [[number, number], [number, number]] = [
