@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { Screen } from '@/components/Screen';
 import { LocationBar } from '@/components/LocationBar';
 import { FilterChips } from '@/components/FilterChips';
@@ -35,6 +35,19 @@ export function PlacesScreen(): JSX.Element {
   const [lines, setLines] = useState<ReadonlySet<DayId>>(new Set());
   const [categories, setCategories] = useState<ReadonlySet<Category>>(new Set());
   const [openKey, setOpenKey] = useState<string | null>(null);
+  const listTop = useRef<HTMLParagraphElement | null>(null);
+  const filtersTouched = useRef(false);
+
+  // Promoting the matches to the top only helps if you are looking at the top.
+  // Tapping a filter half way down the list would otherwise reorder something
+  // above your viewport and leave you where you were.
+  useEffect(() => {
+    if (!filtersTouched.current) {
+      filtersTouched.current = true;
+      return;
+    }
+    listTop.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [lines, categories]);
 
   useEffect(() => {
     setNow(new Date());
@@ -60,13 +73,22 @@ export function PlacesScreen(): JSX.Element {
         verdict: distanceVerdict(km, isoDate),
         matchesQuery: q === '' || searchTerms(place).some((t) => t.includes(q)),
         matchesCategory: categories.size === 0 || categories.has(place.category),
-        // Line filters dim rather than remove, so the shape of the network
-        // stays visible — you can still see how much of the day you skipped.
         onSelectedLine: lines.size === 0 || lines.has(place.day),
       };
     })
       .filter((row) => row.matchesQuery && row.matchesCategory)
-      .sort((a, b) => a.km - b.km);
+      // A day filter promotes rather than dims. It used to grey the other
+      // rows where they stood, which kept the shape of the trip visible and
+      // made you scroll past greyed-out places to reach the ones you asked
+      // for. Matches come to the top, nearest first, and the rest keep their
+      // own order underneath.
+      .sort((a, b) =>
+        a.onSelectedLine === b.onSelectedLine
+          ? a.km - b.km
+          : a.onSelectedLine
+            ? -1
+            : 1,
+      );
   }, [origin.point, isoDate, query, categories, lines]);
 
   const visible = rows.filter((r) => r.onSelectedLine);
@@ -134,7 +156,10 @@ export function PlacesScreen(): JSX.Element {
         />
       </div>
 
-      <p className="numeric px-gutter pb-1 pt-3 text-caption text-muted">
+      <p
+        ref={listTop}
+        className="numeric scroll-mt-3 px-gutter pb-1 pt-3 text-caption text-muted"
+      >
         {visible.length} of {MAP_PLACES.length} · {origin.label}
       </p>
 
@@ -155,16 +180,23 @@ export function PlacesScreen(): JSX.Element {
         />
       ) : (
         <ul>
-          {rows.map((row) => (
-            <PlaceRow
-              key={row.place.key}
-              place={row.place}
-              km={row.km}
-              verdict={row.verdict.text}
-              dimmed={!row.onSelectedLine}
-              done={hydrated && done.includes(row.place.key)}
-              onOpen={() => setOpenKey(row.place.key)}
-            />
+          {rows.map((row, i) => (
+            <Fragment key={row.place.key}>
+              {/* Where the days you picked stop and everything else begins.
+                  Without it the promoted rows just look like a reordering. */}
+              {!row.onSelectedLine && rows[i - 1]?.onSelectedLine && (
+                <li className="rule-t px-gutter pb-1 pt-4">
+                  <p className="eyebrow">Other days</p>
+                </li>
+              )}
+              <PlaceRow
+                place={row.place}
+                km={row.km}
+                verdict={row.verdict.text}
+                done={hydrated && done.includes(row.place.key)}
+                onOpen={() => setOpenKey(row.place.key)}
+              />
+            </Fragment>
           ))}
         </ul>
       )}
@@ -183,38 +215,29 @@ export function PlacesScreen(): JSX.Element {
  * A plain `li`, not a motion one.
  *
  * Thirty-three motion components cost about 120 ms of main thread on a
- * mid-range phone — measured, repeatably — and bought nothing: each row
- * carried an explicit `animate` for the dimmed state, which overrode the
- * stagger variant it was also given, so the stagger never ran. The page
- * transition already provides the movement, and CSS does the fade for free.
+ * mid-range phone — measured, repeatably — and bought nothing: the stagger
+ * variant each row was given was overridden by an explicit `animate` on the
+ * same element, so it never ran. The page transition already provides the
+ * movement.
  */
 function PlaceRow({
   place,
   km,
   verdict,
-  dimmed,
   done,
   onOpen,
 }: {
   place: Place;
   km: number;
   verdict: string;
-  dimmed: boolean;
   done: boolean;
   onOpen: () => void;
 }): JSX.Element {
   return (
-    <li
-      // Filtered-out days fade rather than vanish, and stop taking taps. A CSS
-      // transition does this for nothing; framer-motion charged per row for it.
-      className="rule-b transition-opacity duration-200"
-      style={{ opacity: dimmed ? 0.15 : 1 }}
-      aria-hidden={dimmed}
-    >
+    <li className="rule-b">
       <button
         type="button"
         onClick={onOpen}
-        tabIndex={dimmed ? -1 : 0}
         className="tap flex w-full items-start gap-3 px-gutter py-3 text-left"
       >
         <PlaceField place={place} glyphSize={19} className="h-11 w-11 shrink-0 rounded-sm" />
