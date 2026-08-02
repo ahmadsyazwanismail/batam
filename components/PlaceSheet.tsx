@@ -41,7 +41,7 @@ export function PlaceSheet({
     : undefined;
 
   return (
-    <Sheet open={station !== null} onClose={onClose} title={place?.name ?? 'Station'}>
+    <Sheet open={station !== null} onClose={onClose} title={place?.name ?? 'Place'}>
       {station && place && (
         <div className="px-gutter pt-2">
           <div className="flex items-start justify-between gap-4">
@@ -57,7 +57,7 @@ export function PlaceSheet({
               </h3>
             </div>
             <div className="shrink-0 pt-1">
-              <PlaceField place={place} className="h-14 w-14 shrink-0 rounded-sm" />
+              <PlaceField place={place} glyphSize={24} className="h-14 w-14 shrink-0 rounded-sm" />
             </div>
           </div>
 

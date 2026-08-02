@@ -58,7 +58,7 @@ export function MapScreen(): JSX.Element {
   return (
     <div className="mx-auto flex h-dvh max-w-app flex-col">
       <header className="px-gutter pb-2 pt-6">
-        <p className="eyebrow">All five lines · {MAP_PLACES.length} stops</p>
+        <p className="eyebrow">All five days · {MAP_PLACES.length} places</p>
         <h1 className="mt-1 text-[2rem] font-bold tracking-[-0.035em]">Map</h1>
       </header>
 

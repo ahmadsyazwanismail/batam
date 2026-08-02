@@ -60,7 +60,7 @@ export function Advisor({ now, from }: { now: Date; from: LatLon }): JSX.Element
         {advice.place ? (
           <>
             <div className="flex items-start gap-3">
-              <PlaceField place={advice.place} className="h-11 w-11 shrink-0 rounded-sm" />
+              <PlaceField place={advice.place} glyphSize={19} className="h-11 w-11 shrink-0 rounded-sm" />
               <div className="min-w-0">
                 <p className="flex items-center gap-2 text-[1.375rem] font-bold leading-tight tracking-[-0.03em]">
                   {advice.place.name}

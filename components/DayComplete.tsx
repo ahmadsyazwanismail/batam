@@ -9,7 +9,7 @@ import { LottieMoment } from './LottieMoment';
 import { SPRING } from '@/lib/motion';
 
 /**
- * The third and last Lottie moment: the last station of a day gets ticked.
+ * The third and last Lottie moment: the last stop of a day gets ticked.
  *
  * Fires on the transition into complete, once, and only for a day that was not
  * already finished when the screen mounted — otherwise it would go off every

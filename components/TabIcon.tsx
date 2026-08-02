@@ -2,7 +2,7 @@ import type { Tab } from '@/lib/nav';
 
 /**
  * Transit-signage icons: strokes on a grid, no fills, no rounded caps except
- * where a station dot needs one.
+ * where a single dot needs one.
  */
 export function TabIcon({ name }: { name: Tab['icon'] }): JSX.Element {
   const common = {

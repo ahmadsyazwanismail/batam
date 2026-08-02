@@ -306,7 +306,7 @@ function buildPin(place: Place): HTMLElement {
 function clusterLabel(cluster: Cluster): string {
   // Begins with the number the bubble shows, so the visible label is contained
   // in the accessible name (WCAG 2.5.3).
-  return `${cluster.keys.length} stops here${
+  return `${cluster.keys.length} places here${
     cluster.day ? `, line ${cluster.day}` : ', across several lines'
   }. Zoom in to separate them.`;
 }

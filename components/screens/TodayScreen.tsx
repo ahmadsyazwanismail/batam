@@ -222,7 +222,7 @@ function AfterTheTrip(): JSX.Element {
       <Card className="p-4">
         <p className="font-semibold">That was the trip.</p>
         <p className="mt-2 text-caption leading-relaxed text-muted">
-          Five lines, {MAP_PLACES.length} stops, one hotel move. Everything is
+          Five days, {MAP_PLACES.length} places, one hotel move. Everything is
           still here to look back at.
         </p>
       </Card>

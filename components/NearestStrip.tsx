@@ -46,7 +46,7 @@ export function NearestStrip({
               href="/places"
               className="tap flex items-start gap-3 px-gutter py-3"
             >
-              <PlaceField place={item} className="h-10 w-10 shrink-0 rounded-sm" />
+              <PlaceField place={item} glyphSize={17} className="h-10 w-10 shrink-0 rounded-sm" />
               <span className="min-w-0 flex-1">
                 <span className="flex items-baseline gap-2">
                   <span

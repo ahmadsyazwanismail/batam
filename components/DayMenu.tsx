@@ -8,7 +8,6 @@ import { runningOrder } from '@/lib/route';
 import { formatMinutes } from '@/lib/time';
 import { useHydrated, useTrip } from '@/lib/store';
 import { listVariants, stationVariants, usePrefersReducedMotion } from '@/lib/motion';
-import { CategoryIcon } from './CategoryIcon';
 import { PlaceField } from './PlaceField';
 import { PlaceSheet } from './PlaceSheet';
 import type { DayId } from '@/data/trip';
@@ -82,6 +81,7 @@ export function DayMenu({
                     >
                       <PlaceField
                         place={place}
+                        glyphSize={16}
                         className="h-9 w-9 shrink-0 rounded-sm"
                       />
                       <span className="min-w-0 flex-1">
@@ -95,9 +95,6 @@ export function DayMenu({
                         <span className="numeric mt-0.5 block text-eyebrow text-muted">
                           {formatKm(haversineKm(from, place))}
                         </span>
-                      </span>
-                      <span aria-hidden className="shrink-0 text-muted">
-                        <CategoryIcon category={place.category} size={14} />
                       </span>
                     </button>
                   </li>
@@ -166,7 +163,7 @@ function CourseBlock({
                   onClick={() => onOpen(place.key)}
                   className="tap flex w-full items-stretch gap-3 p-2.5 text-left"
                 >
-                  <PlaceField place={place} className="h-14 w-14 shrink-0 rounded-sm" />
+                  <PlaceField place={place} glyphSize={24} className="h-14 w-14 shrink-0 rounded-sm" />
                   <span className="flex min-w-0 flex-1 flex-col justify-center">
                     <span
                       className={`text-lede font-bold leading-tight tracking-[-0.015em] ${

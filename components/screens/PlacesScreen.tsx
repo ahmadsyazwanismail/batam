@@ -7,7 +7,6 @@ import { LocationBar } from '@/components/LocationBar';
 import { FilterChips } from '@/components/FilterChips';
 import { Distance } from '@/components/Distance';
 import { PlaceField } from '@/components/PlaceField';
-import { CategoryIcon } from '@/components/CategoryIcon';
 import { PlaceSheet } from '@/components/PlaceSheet';
 import { EmptyState } from '@/components/EmptyState';
 import {
@@ -26,7 +25,7 @@ import { useHydrated, useTrip } from '@/lib/store';
 import { listVariants, stationVariants, usePrefersReducedMotion } from '@/lib/motion';
 
 /**
- * Every station, searchable.
+ * Every place, searchable.
  *
  * Sorted by distance, because the question this screen answers is "what is
  * near me" — and the distance is measured from you if that means anything and
@@ -92,14 +91,14 @@ export function PlacesScreen(): JSX.Element {
   // bake in the build machine's idea of "today" and mismatch on hydration.
   if (!now) {
     return (
-      <Screen eyebrow={`Every station · ${MAP_PLACES.length} stops`} title="Places">
+      <Screen eyebrow={`Everywhere on the list · ${MAP_PLACES.length} places`} title="Places">
         <p className="px-gutter text-muted">Working out where you are…</p>
       </Screen>
     );
   }
 
   return (
-    <Screen eyebrow={`Every station · ${MAP_PLACES.length} stops`} title="Places">
+    <Screen eyebrow={`Everywhere on the list · ${MAP_PLACES.length} places`} title="Places">
       <div className="px-gutter pb-3">
         <LocationBar location={location} />
       </div>
@@ -147,8 +146,8 @@ export function PlacesScreen(): JSX.Element {
           title="Nothing matches"
           body={
             query
-              ? `No station answers to “${query.trim()}”. Mall tenants count — try “Chikuro” or “Zhuko”.`
-              : 'No station is in every category you picked.'
+              ? `Nothing answers to “${query.trim()}”. Mall tenants count — try “Chikuro” or “Zhuko”.`
+              : 'Nothing is in every category you picked.'
           }
           actionLabel="Clear the filters"
           onAction={() => {
@@ -217,20 +216,15 @@ function PlaceRow({
         tabIndex={dimmed ? -1 : 0}
         className="tap flex w-full items-start gap-3 px-gutter py-3 text-left"
       >
-        <PlaceField place={place} className="h-11 w-11 shrink-0 rounded-sm" />
+        <PlaceField place={place} glyphSize={19} className="h-11 w-11 shrink-0 rounded-sm" />
 
         <span className="min-w-0 flex-1">
-          <span className="flex items-baseline gap-2">
-            <span
-              className={`font-semibold tracking-[-0.015em] ${
-                done ? 'text-muted line-through' : ''
-              }`}
-            >
-              {place.name}
-            </span>
-            <span className="shrink-0 text-muted" aria-hidden>
-              <CategoryIcon category={place.category} />
-            </span>
+          <span
+            className={`block font-semibold tracking-[-0.015em] ${
+              done ? 'text-muted line-through' : ''
+            }`}
+          >
+            {place.name}
           </span>
           <span className="mt-0.5 block text-caption text-muted">{place.note}</span>
         </span>
