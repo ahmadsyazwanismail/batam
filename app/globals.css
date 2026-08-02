@@ -4,13 +4,17 @@
 
 @layer base {
   :root {
-    --paper: #f4f3ee;
-    --card: #fbfaf6;
-    --ink: #16181c;
-    /* One step darker than the specified #6B7078, which lands at 4.49:1 on
-       paper — a hundredth under the bar. See lib/contrast.test.ts. */
-    --muted: #666b73;
-    --rule: #dedcd3;
+    --paper: #fbf3e6;
+    --card: #fffdf8;
+    --ink: #2a1a10;
+    --accent: #c2410c;
+    --muted: #7a6250;
+    --rule: #e7d8be;
+
+    --meal-sarapan: #e39b3c;
+    --meal-tengahari: #c2410c;
+    --meal-petang: #7e9a4e;
+    --meal-malam: #6b4a8c;
 
     --line-1: #d93f3f;
     --line-2: #e08a1e;
@@ -42,9 +46,9 @@
     letter-spacing: -0.005em;
   }
 
-  /* A grain so faint you would only notice it by its absence. It stops the
-     large flat areas of paper from reading as "unstyled white" and gives the
-     surface something to be. Inline SVG turbulence — no image request. */
+  /* A grain so faint you would only notice it by its absence — it stops the
+     large flat areas of paper reading as "unstyled". Inline SVG turbulence,
+     no image request. */
   body::before {
     content: '';
     position: fixed;
@@ -73,7 +77,23 @@
 
 @layer components {
   .eyebrow {
-    @apply text-eyebrow font-semibold uppercase text-muted;
+    @apply text-eyebrow font-bold uppercase text-muted;
+  }
+
+  /* Signboard type: condensed, uppercase, set large. */
+  .signboard {
+    @apply font-display font-semibold uppercase;
+  }
+
+  /* Every button in the app centres its label. */
+  .btn {
+    @apply tap flex items-center justify-center rounded text-center font-semibold;
+  }
+  .btn-solid {
+    @apply btn bg-ink text-card;
+  }
+  .btn-ghost {
+    @apply btn border border-hairline border-rule text-ink;
   }
 
   .rule-t {

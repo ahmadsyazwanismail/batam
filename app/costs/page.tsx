@@ -57,8 +57,8 @@ export default function CostsPage(): JSX.Element {
           {/* Two lines, because a range this wide will not fit on one at 390px
               and shrinking it would lose the signage weight. */}
           <p
-            className="numeric mt-3 text-display font-bold leading-[0.95] tracking-[-0.035em]"
-            style={{ color: 'var(--line-text)' }}
+            className="signboard numeric mt-3 text-display leading-[0.95]"
+            style={{ color: 'var(--accent)' }}
           >
             {myr(COSTS.totalLowMYR)}
             <span className="block text-[1.25rem] font-semibold text-muted">to</span>

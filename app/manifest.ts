@@ -3,15 +3,15 @@ import { TRIP } from '@/data/trip';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Batam Lines',
+    name: 'Batam',
     short_name: 'Batam',
     description: `Batam, 21–25 August 2026. ${TRIP.travellers}.`,
     start_url: '/',
     scope: '/',
     display: 'standalone',
     orientation: 'portrait',
-    background_color: '#F4F3EE',
-    theme_color: '#D93F3F',
+    background_color: '#FBF3E6',
+    theme_color: '#C2410C',
     lang: 'en',
     categories: ['travel', 'navigation'],
     icons: [
@@ -26,7 +26,7 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     shortcuts: [
       { name: 'Today', url: '/' },
-      { name: 'Map', url: '/map' },
+      { name: 'Days', url: '/days' },
       { name: 'Places', url: '/places' },
     ],
   };

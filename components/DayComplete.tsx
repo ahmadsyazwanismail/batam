@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { lineById, type LineId } from '@/data/trip';
+import { dayById, type DayId } from '@/data/trip';
 import { runningOrder } from '@/lib/route';
 import { useHydrated, useTrip } from '@/lib/store';
 import { LottieMoment } from './LottieMoment';
@@ -16,7 +16,7 @@ import { SPRING } from '@/lib/motion';
  * time you opened the app on a finished day, which is the opposite of a
  * celebration.
  */
-export function DayComplete({ line }: { line: LineId }): JSX.Element | null {
+export function DayComplete({ line }: { line: DayId }): JSX.Element | null {
   const done = useTrip((s) => s.done);
   const hydrated = useHydrated();
   const [showing, setShowing] = useState(false);
@@ -63,7 +63,7 @@ export function DayComplete({ line }: { line: LineId }): JSX.Element | null {
               />
             </div>
             <p className="-mt-2 text-[1.25rem] font-bold tracking-[-0.02em]">
-              {lineById(line).name} complete
+              {dayById(line).name} complete
             </p>
           </motion.div>
         </motion.div>

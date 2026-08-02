@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import type { Station } from '@/lib/route';
-import { lineById, type LineId } from '@/data/trip';
+import { dayById, type DayId } from '@/data/trip';
 import { formatKm } from '@/lib/geo';
 import { listVariants, stationVariants, usePrefersReducedMotion } from '@/lib/motion';
 import { useHydrated, useTrip } from '@/lib/store';
@@ -21,10 +21,10 @@ export function StripMap({
   line,
   stations,
 }: {
-  line: LineId;
+  line: DayId;
   stations: readonly Station[];
 }): JSX.Element {
-  const { colour, onColour } = lineById(line);
+  const { colour, onColour } = dayById(line);
   const [openKey, setOpenKey] = useState<string | null>(null);
   const reduced = usePrefersReducedMotion();
 
@@ -81,7 +81,7 @@ function StationRow({
   onOpen,
 }: {
   station: Station;
-  line: LineId;
+  line: DayId;
   colour: string;
   onColour: string;
   first: boolean;
@@ -95,7 +95,7 @@ function StationRow({
   // A station borrowed from another line shows its role here, not its own
   // blurb — the terminal's "camera collected here on arrival" is a day-one
   // fact and has no business on the departure strip. The sheet still has it.
-  const showNote = place.line === line;
+  const showNote = place.day === line;
 
   return (
     <motion.li variants={stationVariants} className="relative">

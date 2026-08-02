@@ -1,6 +1,6 @@
-import { LINES, TRIP, requirePlace, type Place } from '@/data/trip';
+import { DAYS, TRIP, requirePlace, type Place } from '@/data/trip';
 import { haversineKm, isInBatam, type LatLon } from './geo';
-import { activeLine, parseHhmm, wibDate, wibMinutes } from './time';
+import { activeDay, parseHhmm, wibDate, wibMinutes } from './time';
 import { FERRY } from '@/data/trip';
 
 /**
@@ -56,7 +56,7 @@ export function hasLanded(now: Date): boolean {
 /** The hotel distances fall back to: wherever they are sleeping that night. */
 export function hotelFor(now: Date): Place {
   const today = wibDate(now);
-  const line = LINES.find((l) => l.date === today) ?? activeLine(now);
+  const line = DAYS.find((l) => l.date === today) ?? activeDay(now);
   return requirePlace(line.base);
 }
 

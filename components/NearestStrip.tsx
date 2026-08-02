@@ -8,7 +8,7 @@ import { wibDate } from '@/lib/time';
 import { useHydrated, useTrip } from '@/lib/store';
 import { Distance } from './Distance';
 import { CategoryIcon } from './CategoryIcon';
-import { LineBadge } from './LineBadge';
+import { PlaceField } from './PlaceField';
 import { listVariants, stationVariants, usePrefersReducedMotion } from '@/lib/motion';
 
 /** The live "what is near me" answer, in three rows. */
@@ -46,9 +46,7 @@ export function NearestStrip({
               href="/places"
               className="tap flex items-start gap-3 px-gutter py-3"
             >
-              <span className="shrink-0 pt-0.5">
-                <LineBadge line={item.line} size="sm" />
-              </span>
+              <PlaceField place={item} className="h-10 w-10 shrink-0 rounded-sm" />
               <span className="min-w-0 flex-1">
                 <span className="flex items-baseline gap-2">
                   <span

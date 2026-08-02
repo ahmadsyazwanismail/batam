@@ -46,7 +46,7 @@ export function InstallPrompt(): JSX.Element | null {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 80, opacity: 0 }}
           transition={SPRING}
-          className="fixed inset-x-3 bottom-[calc(theme(spacing.tabbar)+env(safe-area-inset-bottom)+0.75rem)] z-40 border border-hairline border-rule bg-card p-3 shadow-sm"
+          className="fixed inset-x-3 bottom-[calc(theme(spacing.tabbar)+env(safe-area-inset-bottom)+0.75rem)] z-40 rounded-md border border-hairline border-rule bg-card p-3 shadow-sm"
         >
           <p className="text-caption font-semibold">Add Batam Lines to your home screen</p>
           <p className="mt-0.5 text-caption text-muted">
@@ -60,14 +60,14 @@ export function InstallPrompt(): JSX.Element | null {
                 await event.userChoice;
                 dismiss();
               }}
-              className="tap flex-1 bg-ink py-2.5 text-caption font-semibold text-card"
+              className="btn-solid flex-1 py-2.5 text-caption"
             >
               Install
             </button>
             <button
               type="button"
               onClick={dismiss}
-              className="tap flex-1 border border-hairline border-rule py-2.5 text-caption font-semibold text-muted"
+              className="btn-ghost flex-1 py-2.5 text-caption text-muted"
             >
               Not now
             </button>

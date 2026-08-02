@@ -12,7 +12,7 @@
  */
 export function LogoMark({
   size = 32,
-  colour = 'var(--line)',
+  colour = 'var(--accent)',
   className = '',
 }: {
   size?: number;
@@ -26,7 +26,7 @@ export function LogoMark({
       viewBox="0 0 64 64"
       className={className}
       role="img"
-      aria-label="Batam Lines"
+      aria-label="Batam"
     >
       <circle cx="32" cy="32" r="32" fill="var(--ink, #16181C)" />
       {/* The spine, drawn as a capsule so it reads as a line rather than a bar. */}
@@ -51,19 +51,11 @@ export function Logo({
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       <LogoMark size={size} />
-      <span className="flex flex-col leading-none">
-        <span
-          className="font-bold uppercase tracking-[0.14em]"
-          style={{ fontSize: size * 0.42 }}
-        >
-          Batam
-        </span>
-        <span
-          className="mt-[0.15em] font-semibold uppercase tracking-[0.28em] text-muted"
-          style={{ fontSize: size * 0.3 }}
-        >
-          Lines
-        </span>
+      <span
+        className="signboard leading-none tracking-[0.06em]"
+        style={{ fontSize: size * 0.62 }}
+      >
+        Batam
       </span>
     </span>
   );

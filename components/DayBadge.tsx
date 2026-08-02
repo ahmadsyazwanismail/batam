@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { lineById, type LineId } from '@/data/trip';
+import { dayById, type DayId } from '@/data/trip';
 import { SPRING } from '@/lib/motion';
 
 type Size = 'sm' | 'md' | 'lg';
@@ -22,18 +22,18 @@ const SIZES: Record<Size, string> = {
  * and it carries a shared layout id so it flies from a list row into the day
  * header rather than cutting.
  */
-export function LineBadge({
+export function DayBadge({
   line,
   size = 'md',
   withName = false,
   shared = false,
 }: {
-  line: LineId;
+  line: DayId;
   size?: Size;
   withName?: boolean;
   shared?: boolean;
 }): JSX.Element {
-  const { colour, onColour, name } = lineById(line);
+  const { colour, onColour, name } = dayById(line);
 
   const bullet = (
     <motion.span

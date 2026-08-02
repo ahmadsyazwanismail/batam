@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Barlow_Condensed, Inter } from 'next/font/google';
 import './globals.css';
 import { TabBar } from '@/components/TabBar';
-import { LineTheme } from '@/components/LineTheme';
+import { DayTheme } from '@/components/DayTheme';
 import { ServiceWorker } from '@/components/ServiceWorker';
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { Splash } from '@/components/Splash';
@@ -14,13 +14,29 @@ const inter = Inter({
   display: 'swap',
 });
 
+/**
+ * The signboard face. Condensed, set large and uppercase, the way a warung
+ * paints its own name on the shutter.
+ *
+ * Self-hosted by next/font rather than reached for in a system stack: the
+ * mockup used Avenir Next Condensed, which only exists on Apple devices, so
+ * anyone else would have silently got Arial Narrow or worse. This ships with
+ * the app and works offline like everything else here.
+ */
+const signboard = Barlow_Condensed({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  variable: '--font-signboard',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
-  title: 'Batam Lines',
+  title: 'Batam',
   description: `Batam, 21–25 August 2026. ${TRIP.travellers}.`,
-  applicationName: 'Batam Lines',
+  applicationName: 'Batam',
   appleWebApp: {
     capable: true,
-    title: 'Batam Lines',
+    title: 'Batam',
     statusBarStyle: 'default',
   },
   formatDetection: { telephone: false },
@@ -32,7 +48,7 @@ export const viewport: Viewport = {
   // The map pans and zooms; the rest of the app must still be zoomable, so
   // user-scalable is left alone.
   viewportFit: 'cover',
-  themeColor: '#D93F3F',
+  themeColor: '#C2410C',
 };
 
 export default function RootLayout({
@@ -41,9 +57,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }): JSX.Element {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${inter.variable} ${signboard.variable}`}>
       <body>
-        <LineTheme />
+        <DayTheme />
         <ServiceWorker />
         <Splash />
         <a

@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { clusterByScreen, CLUSTER_RADIUS_PX, type ScreenPoint } from './cluster';
-import type { LineId } from '@/data/trip';
+import type { DayId } from '@/data/trip';
 
-const p = (key: string, x: number, y: number, line: LineId = 4): ScreenPoint => ({
+const p = (key: string, x: number, y: number, day: DayId = 4): ScreenPoint => ({
   key,
   x,
   y,
-  line,
+  day,
 });
 
 describe('clusterByScreen', () => {
@@ -64,14 +64,14 @@ describe('clusterByScreen', () => {
 
   it('keeps the line when every member shares one', () => {
     const clusters = clusterByScreen([p('a', 10, 10, 3), p('b', 14, 12, 3)], 60);
-    expect(clusters[0]!.line).toBe(3);
+    expect(clusters[0]!.day).toBe(3);
   });
 
   it('reports a mixed group as having no single line', () => {
     // Line colour means "which day", so a group spanning two days must not
     // claim either of them.
     const clusters = clusterByScreen([p('a', 10, 10, 3), p('b', 14, 12, 4)], 60);
-    expect(clusters[0]!.line).toBeNull();
+    expect(clusters[0]!.day).toBeNull();
   });
 
   it('separates everything once you zoom in far enough', () => {

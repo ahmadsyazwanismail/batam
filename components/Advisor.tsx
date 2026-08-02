@@ -6,7 +6,7 @@ import { advise } from '@/lib/advisor';
 import { directionsUrl } from '@/lib/geo';
 import { useTrip } from '@/lib/store';
 import { CategoryIcon } from './CategoryIcon';
-import { LineBadge } from './LineBadge';
+import { PlaceField } from './PlaceField';
 import { SPRING } from '@/lib/motion';
 import type { LatLon } from '@/lib/geo';
 
@@ -32,7 +32,7 @@ export function Advisor({ now, from }: { now: Date; from: LatLon }): JSX.Element
   return (
     <section
       aria-labelledby="advisor-heading"
-      className="border border-hairline border-rule bg-card"
+      className="overflow-hidden rounded-md border border-hairline border-rule bg-card"
     >
       <div className="flex items-start justify-between gap-3 border-b border-hairline border-rule px-4 py-3">
         <h2 id="advisor-heading" className="eyebrow">
@@ -60,9 +60,7 @@ export function Advisor({ now, from }: { now: Date; from: LatLon }): JSX.Element
         {advice.place ? (
           <>
             <div className="flex items-start gap-3">
-              <span className="shrink-0 pt-0.5">
-                <LineBadge line={advice.place.line} size="sm" />
-              </span>
+              <PlaceField place={advice.place} className="h-11 w-11 shrink-0 rounded-sm" />
               <div className="min-w-0">
                 <p className="flex items-center gap-2 text-[1.375rem] font-bold leading-tight tracking-[-0.03em]">
                   {advice.place.name}
@@ -79,14 +77,14 @@ export function Advisor({ now, from }: { now: Date; from: LatLon }): JSX.Element
                 href={directionsUrl(advice.place)}
                 target="_blank"
                 rel="noreferrer"
-                className="tap flex items-center justify-center bg-ink py-3 font-semibold text-card"
+                className="btn-solid py-3"
               >
                 Directions
               </a>
               <button
                 type="button"
                 onClick={() => toggleDone(advice.place!.key)}
-                className="tap flex items-center justify-center border border-hairline border-rule py-3 font-semibold"
+                className="btn-ghost py-3"
               >
                 Tick it off
               </button>

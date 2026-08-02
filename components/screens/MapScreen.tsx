@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { FilterChips } from '@/components/FilterChips';
 import { PlaceSheet } from '@/components/PlaceSheet';
 import { LocationBar } from '@/components/LocationBar';
-import { MAP_PLACES, type Category, type LineId } from '@/data/trip';
+import { MAP_PLACES, type Category, type DayId } from '@/data/trip';
 import { runningOrder, type Station } from '@/lib/route';
 import { useLocation } from '@/lib/useLocation';
 import { useOnline } from '@/lib/useOnline';
@@ -25,7 +25,7 @@ const MapCanvas = dynamic(
 
 export function MapScreen(): JSX.Element {
   const [now, setNow] = useState<Date | null>(null);
-  const [lines, setLines] = useState<ReadonlySet<LineId>>(new Set());
+  const [lines, setLines] = useState<ReadonlySet<DayId>>(new Set());
   const [categories, setCategories] = useState<ReadonlySet<Category>>(new Set());
   const [openKey, setOpenKey] = useState<string | null>(null);
 
@@ -42,12 +42,12 @@ export function MapScreen(): JSX.Element {
 
   const onSelect = useCallback((key: string) => setOpenKey(key), []);
 
-  const openStation = useMemo((): { station: Station; line: LineId } | null => {
+  const openStation = useMemo((): { station: Station; line: DayId } | null => {
     if (!openKey) return null;
     const place = MAP_PLACES.find((p) => p.key === openKey);
     if (!place) return null;
-    const station = runningOrder(place.line).find((s) => s.place.key === openKey);
-    return station ? { station, line: place.line } : null;
+    const station = runningOrder(place.day).find((s) => s.place.key === openKey);
+    return station ? { station, line: place.day } : null;
   }, [openKey]);
 
   const categoriesPresent = useMemo(
@@ -88,7 +88,7 @@ export function MapScreen(): JSX.Element {
       <main className="relative min-h-0 flex-1">
         {now && (
           <MapCanvas
-            selectedLines={lines}
+            selectedDays={lines}
             selectedCategories={categories}
             you={you}
             accuracy={location.fix?.accuracy ?? null}

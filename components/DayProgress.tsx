@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { lineById, type LineId } from '@/data/trip';
+import { dayById, type DayId } from '@/data/trip';
 import { runningOrder } from '@/lib/route';
 import { useHydrated, useTrip } from '@/lib/store';
 import { SPRING, usePrefersReducedMotion } from '@/lib/motion';
@@ -12,17 +12,17 @@ import { SPRING, usePrefersReducedMotion } from '@/lib/motion';
  * Hotels and the terminal are excluded — you do not "do" your own hotel, and
  * counting it would make every day start at one out of fifteen.
  */
-export function LineProgress({
+export function DayProgress({
   line,
   showLabel = true,
 }: {
-  line: LineId;
+  line: DayId;
   showLabel?: boolean;
 }): JSX.Element {
   const done = useTrip((s) => s.done);
   const hydrated = useHydrated();
   const reduced = usePrefersReducedMotion();
-  const { colour } = lineById(line);
+  const { colour } = dayById(line);
 
   const stations = runningOrder(line).filter(
     (s) => s.place.category !== 'hotel' && s.place.category !== 'ferry',

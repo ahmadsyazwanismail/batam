@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import maplibregl, { type Map as MapLibreMap, type Marker } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { lineById, MAP_PLACES, type Category, type LineId, type Place } from '@/data/trip';
+import { dayById, MAP_PLACES, type Category, type DayId, type Place } from '@/data/trip';
 import { MAP_BOUNDS, MAP_STYLE } from '@/lib/mapStyle';
 import { clusterByScreen, CLUSTER_RADIUS_PX, type Cluster, type ScreenPoint } from '@/lib/cluster';
 import type { LatLon } from '@/lib/geo';
@@ -18,14 +18,14 @@ import type { LatLon } from '@/lib/geo';
  * The glyph carries the category instead, which is what the colour was for.
  */
 export function MapCanvas({
-  selectedLines,
+  selectedDays,
   selectedCategories,
   you,
   accuracy,
   onSelect,
   focus,
 }: {
-  selectedLines: ReadonlySet<LineId>;
+  selectedDays: ReadonlySet<DayId>;
   selectedCategories: ReadonlySet<Category>;
   you: LatLon | null;
   accuracy: number | null;
@@ -87,7 +87,7 @@ export function MapCanvas({
         // MapLibre stamps every custom marker with aria-label="Map marker",
         // which would leave 33 identically named buttons on the screen. Put the
         // real name back after it has had its way.
-        element.setAttribute('aria-label', `${place.name}, line ${place.line}`);
+        element.setAttribute('aria-label', `${place.name}, line ${place.day}`);
         created.set(place.key, { marker, element });
       }
       applyFilters.current?.();
@@ -114,7 +114,7 @@ export function MapCanvas({
         const entry = markers.current.get(place.key);
         if (!entry) continue;
 
-        const onLine = selectedLines.size === 0 || selectedLines.has(place.line);
+        const onLine = selectedDays.size === 0 || selectedDays.has(place.day);
         const inCategory =
           selectedCategories.size === 0 || selectedCategories.has(place.category);
         const dimmed = !onLine || !inCategory;
@@ -130,7 +130,7 @@ export function MapCanvas({
     return () => {
       applyFilters.current = null;
     };
-  }, [selectedLines, selectedCategories]);
+  }, [selectedDays, selectedCategories]);
 
   // --- clustering ---------------------------------------------------------
   // Fifteen stops sit within a couple of kilometres of Nagoya, so at the
@@ -148,7 +148,7 @@ export function MapCanvas({
         // A dimmed pin is not tappable, so it never pulls anything into a group.
         if (entry.element.style.opacity === '0.15') continue;
         const { x, y } = instance.project([place.lon, place.lat]);
-        visible.push({ key: place.key, x, y, line: place.line });
+        visible.push({ key: place.key, x, y, day: place.day });
       }
 
       const clusters = clusterByScreen(visible, CLUSTER_RADIUS_PX);
@@ -267,10 +267,10 @@ export function MapCanvas({
 }
 
 function buildPin(place: Place): HTMLElement {
-  const { colour, onColour } = lineById(place.line);
+  const { colour, onColour } = dayById(place.day);
   const el = document.createElement('button');
   el.type = 'button';
-  el.setAttribute('aria-label', `${place.name}, line ${place.line}`);
+  el.setAttribute('aria-label', `${place.name}, line ${place.day}`);
   // The pin is drawn at 30×38 but the button is 44×44, with the extra as
   // transparent margin above and beside it. Nothing in this app is under 44px,
   // and a bigger visible pin would just collide with its neighbours. Anchoring
@@ -307,13 +307,13 @@ function clusterLabel(cluster: Cluster): string {
   // Begins with the number the bubble shows, so the visible label is contained
   // in the accessible name (WCAG 2.5.3).
   return `${cluster.keys.length} stops here${
-    cluster.line ? `, line ${cluster.line}` : ', across several lines'
+    cluster.day ? `, line ${cluster.day}` : ', across several lines'
   }. Zoom in to separate them.`;
 }
 
 function buildCluster(cluster: Cluster): HTMLElement {
-  const colour = cluster.line ? lineById(cluster.line).colour : '#16181C';
-  const onColour = cluster.line ? lineById(cluster.line).onColour : '#FBFAF6';
+  const colour = cluster.day ? dayById(cluster.day).colour : '#16181C';
+  const onColour = cluster.day ? dayById(cluster.day).onColour : '#FBFAF6';
 
   const el = document.createElement('button');
   el.type = 'button';

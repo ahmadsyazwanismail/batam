@@ -1,4 +1,4 @@
-import { FERRY, MAP_PLACES, lineByDate, type MinutesOfDay } from '@/data/trip';
+import { FERRY, MAP_PLACES, dayByDate, type MinutesOfDay } from '@/data/trip';
 import { parseHhmm, wibDate, wibMinutes } from './time';
 import { nextPrayer, prayerTimes } from './prayer';
 import type { LatLon } from './geo';
@@ -30,7 +30,7 @@ export function upcoming(
 ): readonly Upcoming[] {
   const today = wibDate(now);
   const minutes = wibMinutes(now);
-  const line = lineByDate(today);
+  const line = dayByDate(today);
   const events: Upcoming[] = [];
 
   const push = (
@@ -60,7 +60,7 @@ export function upcoming(
   // Anywhere on today's line that opens later today.
   if (line) {
     for (const place of MAP_PLACES) {
-      if (place.line !== line.id || !place.opening) continue;
+      if (place.day !== line.id || !place.opening) continue;
       push('opening', `${place.name} opens`, place.opening.opens);
     }
   }

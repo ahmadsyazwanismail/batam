@@ -1,6 +1,6 @@
 'use client';
 
-import { LINES, TRIP } from '@/data/trip';
+import { DAYS, TRIP } from '@/data/trip';
 import { formatTripDate } from '@/lib/time';
 
 /**
@@ -13,8 +13,8 @@ export function Countdown({ days }: { days: number }): JSX.Element {
       <p className="eyebrow">Departure in</p>
       <p className="numeric mt-2 flex items-baseline gap-3">
         <span
-          className="text-display-lg font-bold tracking-[-0.04em]"
-          style={{ color: 'var(--line-text)' }}
+          className="signboard text-display-lg"
+          style={{ color: 'var(--accent)' }}
         >
           {days}
         </span>
@@ -24,7 +24,7 @@ export function Countdown({ days }: { days: number }): JSX.Element {
       </p>
       <p className="mt-3 text-caption text-muted">
         {formatTripDate(TRIP.startDate)} to {formatTripDate(TRIP.endDate)} ·{' '}
-        {LINES.length} lines · {TRIP.travellers}
+        {DAYS.length} lines · {TRIP.travellers}
       </p>
     </div>
   );

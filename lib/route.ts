@@ -1,12 +1,12 @@
 import {
   BOOKINGS,
   FERRY,
-  LINES,
+  DAYS,
   MAP_PLACES,
   getPlace,
-  lineById,
+  dayById,
   requirePlace,
-  type LineId,
+  type DayId,
   type MinutesOfDay,
   type Place,
 } from '@/data/trip';
@@ -63,8 +63,8 @@ const DETOUR_TOLERANCE = 1.25;
  * it belongs to line 2 — that is exactly what an interchange is, and a day
  * that starts nowhere is not a running order.
  */
-function openingConnection(lineId: LineId): { place: Place; note: string } {
-  const line = lineById(lineId);
+function openingConnection(lineId: DayId): { place: Place; note: string } {
+  const line = dayById(lineId);
 
   const arriving = FERRY.legs.find((leg) => leg.date === line.date && leg.arrives);
   if (arriving) {
@@ -82,16 +82,16 @@ function openingConnection(lineId: LineId): { place: Place; note: string } {
 }
 
 /** Where the day ends. Only the ferry home qualifies. */
-function closingConnection(lineId: LineId): { place: Place; note: string } | null {
-  const line = lineById(lineId);
+function closingConnection(lineId: DayId): { place: Place; note: string } | null {
+  const line = dayById(lineId);
   const leaving = FERRY.legs.find((leg) => leg.date === line.date && !leg.arrives);
   if (!leaving) return null;
   const terminal = getPlace('ferry');
   return terminal ? { place: terminal, note: 'Ferry home' } : null;
 }
 
-function fixedTimeFor(place: Place, lineId: LineId): FixedTime | undefined {
-  const line = lineById(lineId);
+function fixedTimeFor(place: Place, lineId: DayId): FixedTime | undefined {
+  const line = dayById(lineId);
 
   if (place.key === 'ferry') {
     const arriving = FERRY.legs.find((l) => l.date === line.date && l.arrives);
@@ -159,16 +159,16 @@ function nearestNeighbour(places: readonly Place[], anchor: Place): Place[] {
 const isInterchange = (place: Place): boolean =>
   place.category === 'hotel' || place.category === 'ferry';
 
-export function runningOrder(lineId: LineId): Station[] {
+export function runningOrder(lineId: DayId): Station[] {
   const opening = openingConnection(lineId);
   const closing = closingConnection(lineId);
 
   // Mall tenants are contents, not stops — you walk into one building.
-  const own = MAP_PLACES.filter((p) => p.line === lineId);
+  const own = MAP_PLACES.filter((p) => p.day === lineId);
 
   // On a check-in day you drop the bags before you do anything else, so the
   // hotel being checked into today comes straight after the opening station.
-  const checkingIn = BOOKINGS.find((b) => b.checkIn === lineById(lineId).date);
+  const checkingIn = BOOKINGS.find((b) => b.checkIn === dayById(lineId).date);
   const arrival =
     checkingIn && checkingIn.hotel !== opening.place.key
       ? own.find((p) => p.key === checkingIn.hotel)
@@ -234,8 +234,8 @@ export function runningOrder(lineId: LineId): Station[] {
 }
 
 /** Every day's order, for the Today screen and the advisor. */
-export function allRunningOrders(): Record<LineId, Station[]> {
-  const out = {} as Record<LineId, Station[]>;
-  for (const line of LINES) out[line.id] = runningOrder(line.id);
+export function allRunningOrders(): Record<DayId, Station[]> {
+  const out = {} as Record<DayId, Station[]>;
+  for (const line of DAYS) out[line.id] = runningOrder(line.id);
   return out;
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  activeLine,
+  activeDay,
   formatMinutes,
   formatTripDate,
   isOpenAt,
@@ -60,7 +60,7 @@ describe('tripPhase', () => {
     const phase = tripPhase(new Date('2026-08-19T02:00:00Z'));
     if (phase.phase !== 'before') throw new Error('expected before');
     expect(phase.daysUntil).toBe(2);
-    expect(phase.firstLine.id).toBe(1);
+    expect(phase.firstDay.id).toBe(1);
   });
 
   it('finds the running line on each day', () => {
@@ -74,7 +74,7 @@ describe('tripPhase', () => {
     for (const [iso, id] of cases) {
       const phase = tripPhase(new Date(iso));
       if (phase.phase !== 'during') throw new Error(`expected during on ${iso}`);
-      expect(phase.line.id).toBe(id);
+      expect(phase.day.id).toBe(id);
       expect(phase.dayNumber).toBe(id);
     }
   });
@@ -82,13 +82,13 @@ describe('tripPhase', () => {
   it('closes after the last ferry', () => {
     const phase = tripPhase(new Date('2026-08-26T04:00:00Z'));
     if (phase.phase !== 'after') throw new Error('expected after');
-    expect(phase.lastLine.id).toBe(5);
+    expect(phase.lastDay.id).toBe(5);
   });
 
   it('always has a line to wear', () => {
-    expect(activeLine(new Date('2026-01-01T00:00:00Z')).id).toBe(1);
-    expect(activeLine(midTrip).id).toBe(3);
-    expect(activeLine(new Date('2027-01-01T00:00:00Z')).id).toBe(5);
+    expect(activeDay(new Date('2026-01-01T00:00:00Z')).id).toBe(1);
+    expect(activeDay(midTrip).id).toBe(3);
+    expect(activeDay(new Date('2027-01-01T00:00:00Z')).id).toBe(5);
   });
 });
 
