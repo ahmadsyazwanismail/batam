@@ -39,6 +39,9 @@ export function LineBadge({
     <motion.span
       {...(shared ? { layoutId: `line-badge-${line}` } : {})}
       transition={SPRING}
+      // The numeral is a graphic here — the sr-only label beside it says
+      // "Line 3, Batam Centre", and announcing both reads as "3 Line 3".
+      aria-hidden
       className={`numeric inline-flex items-center justify-center rounded-full px-2 font-bold leading-none ${SIZES[size]}`}
       style={{ backgroundColor: colour, color: onColour }}
     >
@@ -50,7 +53,7 @@ export function LineBadge({
     return (
       <span className="inline-flex items-center">
         {bullet}
-        <span className="sr-only">{`Line ${line}, ${name}`}</span>
+        <span className="sr-only">{`Line ${line}, ${name}. `}</span>
       </span>
     );
   }
@@ -58,7 +61,10 @@ export function LineBadge({
   return (
     <span className="inline-flex items-center gap-2">
       {bullet}
-      <span className="font-semibold tracking-[-0.01em]">{name}</span>
+      <span className="font-semibold tracking-[-0.01em]">
+        <span className="sr-only">{`Line ${line}, `}</span>
+        {name}
+      </span>
     </span>
   );
 }
