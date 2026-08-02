@@ -8,12 +8,19 @@
  * the numbers, and `contrast.test.ts` reads `app/globals.css` and fails if the
  * stylesheet has drifted from them.
  *
- * Dark is not an inversion. Warm paper inverted goes blue-grey and cold, which
- * is wrong for an app about food; these grounds keep the brown in them. Every
- * foreground below was moved until it cleared the same bar on the dark grounds
- * that its light counterpart clears on paper — several of them had to change a
- * lot, because a colour tuned to sit on cream is nearly always too dark to sit
- * on brown-black.
+ * Bone and jade, in both themes. It replaced Makan's cream and sambal, which
+ * was warm and appetising and also the single most common look an interface
+ * lands on by default. Bone is an off-white with a green cast rather than a
+ * cream one, so the two themes are one family rather than two apps.
+ *
+ * Dark is not that palette dimmed: the ground is a green-black, chosen over
+ * the neutral charcoal every dark theme defaults to, and jade has to come a
+ * long way up to be legible on it.
+ *
+ * The four meal colours stay warm in both. They are the app's semantics —
+ * amber breakfast, sambal lunch, olive tea, purple dinner — not chrome, and
+ * turning them green because the accent went green would lose the meaning.
+ * Each was re-checked against the new grounds rather than assumed.
  */
 
 export interface ThemeTokens {
@@ -38,12 +45,15 @@ export interface ThemeTokens {
 }
 
 export const LIGHT: ThemeTokens = {
-  paper: '#FBF3E6',
-  card: '#FFFDF8',
-  ink: '#2A1A10',
-  muted: '#7A6250',
-  rule: '#E7D8BE',
-  accent: '#C2410C',
+  // Bone: an off-white with a green cast rather than a cream one, so it is the
+  // same family as the dark ground rather than a different app in daylight.
+  paper: '#F6F4EF',
+  card: '#FDFDFA',
+  ink: '#16201B',
+  muted: '#5F6B63',
+  rule: '#DFE0D8',
+  // Jade, deep enough to be read as text as well as used as a fill.
+  accent: '#1F5D4C',
   onAccent: '#FFFFFF',
   meal: {
     sarapan: '#E39B3C',
@@ -61,16 +71,17 @@ export const LIGHT: ThemeTokens = {
 };
 
 export const DARK: ThemeTokens = {
-  // Warm, not blue: the same hue family as the paper, taken right down.
-  paper: '#17110C',
-  card: '#211913',
-  ink: '#F4EADB',
-  muted: '#B7A18B',
-  rule: '#3A2C21',
-  // Sambal has to come up a long way to be readable on this ground.
-  accent: '#FF8A5B',
-  // …which means it is now a light fill, so its label goes dark.
-  onAccent: '#1A120C',
+  // Bone and jade. A green-black ground rather than a neutral charcoal —
+  // a charcoal is the default and reads as one; this has a colour in it.
+  paper: '#0F1613',
+  card: '#182421',
+  ink: '#EDEFE8',
+  muted: '#9DACA4',
+  rule: '#2B3A35',
+  // Jade has to come up a long way to be readable on this ground.
+  accent: '#5FC9A6',
+  // …which makes it a light fill, so its label goes dark.
+  onAccent: '#0D1512',
   meal: {
     sarapan: '#E8A64B',
     tengahari: '#FF8A5B',

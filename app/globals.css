@@ -10,17 +10,17 @@
      opacity modifiers (`bg-card/95`) work, and `--x` as a real colour, so
      inline `style={{ color: 'var(--accent)' }}` keeps working. */
   :root {
-    --paper-rgb: 251 243 230;
+    --paper-rgb: 246 244 239;
     --paper: rgb(var(--paper-rgb));
-    --card-rgb: 255 253 248;
+    --card-rgb: 253 253 250;
     --card: rgb(var(--card-rgb));
-    --ink-rgb: 42 26 16;
+    --ink-rgb: 22 32 27;
     --ink: rgb(var(--ink-rgb));
-    --muted-rgb: 122 98 80;
+    --muted-rgb: 95 107 99;
     --muted: rgb(var(--muted-rgb));
-    --rule-rgb: 231 216 190;
+    --rule-rgb: 223 224 216;
     --rule: rgb(var(--rule-rgb));
-    --accent-rgb: 194 65 12;
+    --accent-rgb: 31 93 76;
     --accent: rgb(var(--accent-rgb));
     --on-accent-rgb: 255 255 255;
     --on-accent: rgb(var(--on-accent-rgb));
@@ -40,29 +40,29 @@
     --meal-petang-text: rgb(var(--meal-petang-text-rgb));
     --meal-malam-text-rgb: 107 74 140;
     --meal-malam-text: rgb(var(--meal-malam-text-rgb));
-    --shadow-modal: 0 18px 50px rgba(42, 26, 16, 0.28);
+    --shadow-modal: 0 18px 50px rgba(22, 32, 27, 0.20);
     color-scheme: light;
   }
 
-  /* Dark is not an inversion. Inverted cream goes blue-grey and cold, which is
-     wrong for an app about food, so these grounds keep the brown in them and
-     every foreground was re-derived against them rather than reused. A warm
-     shadow is also invisible on a warm-black ground, hence the second one. */
+  /* Bone and jade in both themes. Dark is not this dimmed — the ground is a
+     green-black rather than the neutral charcoal every dark theme defaults to,
+     and jade comes a long way up to stay legible on it. The four meal colours
+     stay warm in both, because they carry meaning rather than chrome. */
   @media (prefers-color-scheme: dark) {
     :root {
-      --paper-rgb: 23 17 12;
+      --paper-rgb: 15 22 19;
       --paper: rgb(var(--paper-rgb));
-      --card-rgb: 33 25 19;
+      --card-rgb: 24 36 33;
       --card: rgb(var(--card-rgb));
-      --ink-rgb: 244 234 219;
+      --ink-rgb: 237 239 232;
       --ink: rgb(var(--ink-rgb));
-      --muted-rgb: 183 161 139;
+      --muted-rgb: 157 172 164;
       --muted: rgb(var(--muted-rgb));
-      --rule-rgb: 58 44 33;
+      --rule-rgb: 43 58 53;
       --rule: rgb(var(--rule-rgb));
-      --accent-rgb: 255 138 91;
+      --accent-rgb: 95 201 166;
       --accent: rgb(var(--accent-rgb));
-      --on-accent-rgb: 26 18 12;
+      --on-accent-rgb: 13 21 18;
       --on-accent: rgb(var(--on-accent-rgb));
       --meal-sarapan-rgb: 232 166 75;
       --meal-sarapan: rgb(var(--meal-sarapan-rgb));
@@ -88,19 +88,19 @@
   /* The toggle has to beat the media query in *both* directions, so light is
      written out again rather than left to the cascade. */
   :root[data-theme='dark'] {
-    --paper-rgb: 23 17 12;
+    --paper-rgb: 15 22 19;
     --paper: rgb(var(--paper-rgb));
-    --card-rgb: 33 25 19;
+    --card-rgb: 24 36 33;
     --card: rgb(var(--card-rgb));
-    --ink-rgb: 244 234 219;
+    --ink-rgb: 237 239 232;
     --ink: rgb(var(--ink-rgb));
-    --muted-rgb: 183 161 139;
+    --muted-rgb: 157 172 164;
     --muted: rgb(var(--muted-rgb));
-    --rule-rgb: 58 44 33;
+    --rule-rgb: 43 58 53;
     --rule: rgb(var(--rule-rgb));
-    --accent-rgb: 255 138 91;
+    --accent-rgb: 95 201 166;
     --accent: rgb(var(--accent-rgb));
-    --on-accent-rgb: 26 18 12;
+    --on-accent-rgb: 13 21 18;
     --on-accent: rgb(var(--on-accent-rgb));
     --meal-sarapan-rgb: 232 166 75;
     --meal-sarapan: rgb(var(--meal-sarapan-rgb));
@@ -123,17 +123,17 @@
   }
 
   :root[data-theme='light'] {
-    --paper-rgb: 251 243 230;
+    --paper-rgb: 246 244 239;
     --paper: rgb(var(--paper-rgb));
-    --card-rgb: 255 253 248;
+    --card-rgb: 253 253 250;
     --card: rgb(var(--card-rgb));
-    --ink-rgb: 42 26 16;
+    --ink-rgb: 22 32 27;
     --ink: rgb(var(--ink-rgb));
-    --muted-rgb: 122 98 80;
+    --muted-rgb: 95 107 99;
     --muted: rgb(var(--muted-rgb));
-    --rule-rgb: 231 216 190;
+    --rule-rgb: 223 224 216;
     --rule: rgb(var(--rule-rgb));
-    --accent-rgb: 194 65 12;
+    --accent-rgb: 31 93 76;
     --accent: rgb(var(--accent-rgb));
     --on-accent-rgb: 255 255 255;
     --on-accent: rgb(var(--on-accent-rgb));
@@ -153,7 +153,7 @@
     --meal-petang-text: rgb(var(--meal-petang-text-rgb));
     --meal-malam-text-rgb: 107 74 140;
     --meal-malam-text: rgb(var(--meal-malam-text-rgb));
-    --shadow-modal: 0 18px 50px rgba(42, 26, 16, 0.28);
+    --shadow-modal: 0 18px 50px rgba(22, 32, 27, 0.20);
     color-scheme: light;
   }
 

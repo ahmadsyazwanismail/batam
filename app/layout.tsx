@@ -49,7 +49,7 @@ export const viewport: Viewport = {
   // user-scalable is left alone.
   viewportFit: 'cover',
   // Overwritten at runtime by the theme toggle; this is the light default.
-  themeColor: '#FBF3E6',
+  themeColor: '#F6F4EF',
 };
 
 export default function RootLayout({

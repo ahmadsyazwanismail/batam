@@ -79,9 +79,21 @@ describe('places the stylesheet could hard-code a colour and break one theme', (
     expect(block).not.toMatch(/color:\s*#fff/i);
   });
 
-  it('has a modal shadow per theme, since a warm one vanishes on warm black', () => {
-    expect(CSS).toMatch(/--shadow-modal:.*rgba\(42, 26, 16/);
+  it('has a modal shadow per theme, since a tinted one vanishes on a dark ground', () => {
+    // Light casts in the ink's own hue; dark casts in black, because a tinted
+    // shadow on a green-black ground is invisible.
+    expect(CSS).toMatch(/--shadow-modal:.*rgba\(22, 32, 27/);
     expect(CSS).toMatch(/--shadow-modal:.*rgba\(0, 0, 0/);
+  });
+
+  it('keeps the light ground and the dark ground in the same hue family', () => {
+    // Bone and jade is one palette in two weights, not two palettes.
+    const hue = (hex: string): number => {
+      const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(1 + i, 3 + i), 16));
+      return g! - Math.min(r!, b!);
+    };
+    expect(hue(LIGHT.paper), 'light ground has no green in it').toBeGreaterThan(0);
+    expect(hue(DARK.paper), 'dark ground has no green in it').toBeGreaterThan(0);
   });
 });
 
@@ -170,9 +182,19 @@ describe('the two themes are actually different', () => {
     expect(contrastRatio(LIGHT.ink, DARK.ink)).toBeGreaterThan(10);
   });
 
-  it('keeps the dark ground warm rather than blue', () => {
-    // Inverted cream goes blue-grey, which is wrong for an app about food.
-    const [r, , b] = [0, 2, 4].map((i) => parseInt(DARK.paper.slice(1 + i, 3 + i), 16));
+  it('gives the dark ground a colour rather than a neutral charcoal', () => {
+    // Light is cream and sambal; dark is bone and jade. What both must avoid is
+    // the default — a grey with no hue in it, which is what a dark theme looks
+    // like when nobody chose one.
+    const [r, g, b] = [0, 2, 4].map((i) => parseInt(DARK.paper.slice(1 + i, 3 + i), 16));
+    const spread = Math.max(r!, g!, b!) - Math.min(r!, g!, b!);
+    expect(spread, 'dark ground is neutral grey').toBeGreaterThanOrEqual(4);
+    // Green leads, which is what makes it jade rather than charcoal.
+    expect(g!).toBeGreaterThan(r!);
+  });
+
+  it('keeps the light ground warm, which is what Makan is', () => {
+    const [r, , b] = [0, 2, 4].map((i) => parseInt(LIGHT.paper.slice(1 + i, 3 + i), 16));
     expect(r!).toBeGreaterThan(b!);
   });
 });

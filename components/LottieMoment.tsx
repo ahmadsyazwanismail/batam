@@ -54,7 +54,7 @@ export function LottieMoment({
     const value = getComputedStyle(document.documentElement)
       .getPropertyValue('--accent')
       .trim();
-    setColour(value || '#C2410C');
+    setColour(value || '#1F5D4C');
   }, []);
 
   if (!colour) return null;

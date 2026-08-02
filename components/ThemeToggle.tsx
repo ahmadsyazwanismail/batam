@@ -16,8 +16,8 @@ export const THEME_KEY = 'batam-theme';
  */
 export const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem('${THEME_KEY}');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t)}}catch(e){}})()`;
 
-const LIGHT_HEX = '#FBF3E6';
-const DARK_HEX = '#17110C';
+const LIGHT_HEX = '#F6F4EF';
+const DARK_HEX = '#0F1613';
 
 function apply(choice: ThemeChoice): void {
   const root = document.documentElement;

@@ -51,8 +51,8 @@ function style(variant: 'light_all' | 'dark_all', backdrop: string): StyleSpecif
   };
 }
 
-export const MAP_STYLE = style('light_all', '#FBF3E6');
-export const MAP_STYLE_DARK = style('dark_all', '#17110C');
+export const MAP_STYLE = style('light_all', '#F6F4EF');
+export const MAP_STYLE_DARK = style('dark_all', '#0F1613');
 
 export function mapStyle(dark: boolean): StyleSpecification {
   return dark ? MAP_STYLE_DARK : MAP_STYLE;
