@@ -43,7 +43,7 @@ export function Advisor({ now, from }: { now: Date; from: LatLon }): JSX.Element
             type="checkbox"
             checked={raining}
             onChange={(e) => setRaining(e.target.checked)}
-            className="h-4 w-4 accent-[var(--line)]"
+            className="h-4 w-4 accent-[var(--accent)]"
           />
           Raining
         </label>

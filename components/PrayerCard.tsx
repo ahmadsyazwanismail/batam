@@ -51,12 +51,12 @@ export function PrayerCard({ now, from }: { now: Date; from: LatLon }): JSX.Elem
               className={`border-hairline border-rule px-3 py-3 ${
                 i % 3 !== 2 ? 'border-r' : ''
               } ${i < 3 ? 'border-b' : ''}`}
-              style={isNext ? { backgroundColor: 'color-mix(in srgb, var(--line) 8%, transparent)' } : undefined}
+              style={isNext ? { backgroundColor: 'color-mix(in srgb, var(--accent) 8%, transparent)' } : undefined}
             >
               {/* Syuruk is not a prayer, but it is not less legible either —
                   fading it broke contrast, so the distinction is carried by
                   the label rather than by the ink. */}
-              <p className="eyebrow" style={isNext ? { color: 'var(--line-text)' } : undefined}>
+              <p className="eyebrow" style={isNext ? { color: 'var(--accent)' } : undefined}>
                 {PRAYER_LABEL[name]}
                 {!IS_PRAYER[name] && <span className="sr-only"> (sunrise, not a prayer)</span>}
               </p>
@@ -64,7 +64,7 @@ export function PrayerCard({ now, from }: { now: Date; from: LatLon }): JSX.Elem
                 className={`numeric mt-1 text-lede font-bold tabular-nums ${
                   passed && !isNext ? 'text-muted' : ''
                 }`}
-                style={isNext ? { color: 'var(--line-text)' } : undefined}
+                style={isNext ? { color: 'var(--accent)' } : undefined}
               >
                 {at === null ? '—' : formatMinutes(at)}
               </p>

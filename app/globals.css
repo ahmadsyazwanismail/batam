@@ -16,17 +16,11 @@
     --meal-petang: #7e9a4e;
     --meal-malam: #6b4a8c;
 
-    --line-1: #d93f3f;
-    --line-2: #e08a1e;
-    --line-3: #2e9e6b;
-    --line-4: #2c74bc;
-    --line-5: #7d4fb0;
-
-    /* Set per-route to the line running that day. Line colour is the only
-       saturated colour in the system and it always means "this day". */
-    --line: var(--line-1);
-    /* The same line, dark enough to be read as text on paper. */
-    --line-text: #c53939;
+    /* The five day colours live in data/trip.ts and are read straight off it
+       by the only thing that still uses them — the day filter chips. They were
+       also being painted onto a --line custom property and used for checkboxes,
+       selection, the location bar and the theme-colour meta, which meant the
+       app's chrome changed colour by day while the accent beside it did not. */
 
     color-scheme: light;
   }
@@ -70,7 +64,7 @@
   }
 
   ::selection {
-    background-color: var(--line);
+    background-color: var(--accent);
     color: #fff;
   }
 }

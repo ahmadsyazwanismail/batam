@@ -26,7 +26,7 @@ export function PackingList(): JSX.Element {
                   type="checkbox"
                   checked={isPacked}
                   onChange={() => togglePacked(item.key)}
-                  className="h-5 w-5 shrink-0 accent-[var(--line)]"
+                  className="h-5 w-5 shrink-0 accent-[var(--accent)]"
                 />
                 <span
                   className={

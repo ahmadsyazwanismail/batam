@@ -89,7 +89,7 @@ function Status({ children }: { children: React.ReactNode }): JSX.Element {
   return (
     <p
       className="border-l-[3px] bg-card py-2 pl-3 pr-2 text-caption leading-relaxed text-muted"
-      style={{ borderColor: 'var(--line)' }}
+      style={{ borderColor: 'var(--accent)' }}
       role="status"
     >
       {children}

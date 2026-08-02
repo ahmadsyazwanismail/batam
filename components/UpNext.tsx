@@ -38,7 +38,7 @@ export function UpNext({ now, from }: { now: Date; from: LatLon }): JSX.Element 
           >
             <span
               className="numeric w-[3.4rem] shrink-0 text-lede font-bold tabular-nums"
-              style={row.urgent ? { color: 'var(--line-text)' } : undefined}
+              style={row.urgent ? { color: 'var(--accent)' } : undefined}
             >
               {formatMinutes(row.at)}
             </span>

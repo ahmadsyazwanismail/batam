@@ -118,7 +118,7 @@ export function PlaceSheet({
               className="btn border py-3"
               style={
                 isDone
-                  ? { borderColor: 'var(--line)', color: 'var(--line-text)' }
+                  ? { borderColor: 'var(--accent)', color: 'var(--accent)' }
                   : { borderColor: 'var(--rule)' }
               }
             >

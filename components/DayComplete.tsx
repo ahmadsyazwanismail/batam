@@ -39,31 +39,48 @@ export function DayComplete({ line }: { line: DayId }): JSX.Element | null {
     wasComplete.current = complete;
   }, [complete, hydrated]);
 
+  // It closes when the animation finishes — but under reduced motion the
+  // animation never plays, so onComplete never fires, and if the Lottie chunk
+  // fails to load there is nothing to fire it at all. A full-screen overlay
+  // must never be able to sit there forever, so it also closes on a clock.
+  useEffect(() => {
+    if (!showing) return;
+    const id = window.setTimeout(() => setShowing(false), 2600);
+    return () => window.clearTimeout(id);
+  }, [showing]);
+
   return (
     <AnimatePresence>
       {showing && (
         <motion.div
-          className="pointer-events-none fixed inset-0 z-[60] flex items-center justify-center"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/35 px-gutter backdrop-blur-[2px]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onPointerDown={() => setShowing(false)}
           role="status"
         >
+          {/* It floated bare over the page before, with no ground of its own,
+              which read as a rendering fault rather than as a moment. */}
           <motion.div
-            initial={{ scale: 0.85 }}
-            animate={{ scale: 1 }}
+            initial={{ scale: 0.9, y: 8 }}
+            animate={{ scale: 1, y: 0 }}
             transition={SPRING}
-            className="flex flex-col items-center"
+            className="flex w-full max-w-[19rem] flex-col items-center rounded-sheet border border-hairline border-rule bg-card px-6 pb-7 pt-3 shadow-[0_18px_50px_rgba(42,26,16,0.28)]"
           >
-            <div className="w-44">
+            <div className="w-36">
               <LottieMoment
                 name="celebrate"
                 loop={false}
                 onComplete={() => setShowing(false)}
               />
             </div>
-            <p className="-mt-2 text-[1.25rem] font-bold tracking-[-0.02em]">
+            <p className="-mt-1 text-center text-[1.25rem] font-bold leading-tight tracking-[-0.02em]">
               {dayById(line).name} complete
+            </p>
+            <p className="eyebrow mt-2 text-muted">
+              Day {line} · every stop ticked
             </p>
           </motion.div>
         </motion.div>

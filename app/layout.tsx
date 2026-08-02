@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from 'next';
 import { Barlow_Condensed, Inter } from 'next/font/google';
 import './globals.css';
 import { TabBar } from '@/components/TabBar';
-import { DayTheme } from '@/components/DayTheme';
 import { ServiceWorker } from '@/components/ServiceWorker';
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { Splash } from '@/components/Splash';
@@ -59,7 +58,6 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${signboard.variable}`}>
       <body>
-        <DayTheme />
         <ServiceWorker />
         <Splash />
         <a
