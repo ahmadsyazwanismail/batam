@@ -113,7 +113,7 @@ describe('the day starts where the day actually starts', () => {
     const last = stations[stations.length - 1]!;
     expect(last.place.key).toBe('ferry');
     expect(last.connection).toBe('Ferry home');
-    expect(last.fixedTime?.label).toBe('Bags 3:30 pm–4:30 pm · sails 5:00 pm');
+    expect(last.fixedTime?.label).toBe('Bags 12:15 pm–1:15 pm · sails 1:45 pm');
   });
 
   it('starts every other day at that day’s hotel', () => {

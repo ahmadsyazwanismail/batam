@@ -36,11 +36,11 @@ describe('upcoming', () => {
   });
 
   it('shows the bag check-in and the sailing on the last day, as deadlines', () => {
-    const rows = upcoming(at('2026-08-25', '09:00'), radisson, 8);
+    const rows = upcoming(at('2026-08-25', '08:00'), radisson, 8);
     const deadlines = rows.filter((r) => r.kind === 'deadline');
     expect(deadlines.length).toBeGreaterThanOrEqual(2);
     for (const d of deadlines) expect(d.urgent).toBe(true);
-    expect(rows.some((r) => r.label === 'Bag check-in closes' && r.at === 16 * 60 + 30)).toBe(
+    expect(rows.some((r) => r.label === 'Bag check-in closes' && r.at === 13 * 60 + 15)).toBe(
       true,
     );
   });

@@ -112,6 +112,11 @@ export interface Booking {
 
 export interface FerryLeg {
   readonly direction: 'out' | 'back';
+  /**
+   * A later sailing that has been asked for but not granted. The app plans
+   * around `departs`, because that is the ticket actually held.
+   */
+  readonly requestedDeparts?: string;
   readonly from: string;
   readonly to: string;
   readonly date: string;
@@ -681,14 +686,42 @@ interface Ferry {
   readonly legs: readonly [FerryLeg, FerryLeg];
 }
 
+/**
+ * The sailing home, as ticketed.
+ *
+ * A change to 17:15 has been requested and not confirmed, so it lives on the
+ * leg as `requestedDeparts` and nothing in the app plans around it. Planning
+ * around a later boat you have not been given is how people miss the one they
+ * actually hold.
+ */
+const RETURN_DEPARTS = hhmm(13, 45);
+
+/**
+ * The bag window, relative to the sailing.
+ *
+ * These offsets are the ones the original 15:30–16:30 window implied against a
+ * 17:00 departure — ninety minutes before to thirty minutes before. They are
+ * applied to whatever the sailing actually is, rather than left as fixed clock
+ * times that would have silently belonged to a boat that is not being caught.
+ * Worth confirming with the operator when the time change is requested.
+ */
+const BAG_DROP_OPENS_BEFORE = 90;
+const BAG_DROP_CLOSES_BEFORE = 30;
+
+function bagDrop(departs: MinutesOfDay): OpeningHours {
+  return {
+    opens: departs - BAG_DROP_OPENS_BEFORE,
+    closes: departs - BAG_DROP_CLOSES_BEFORE,
+  };
+}
+
 export const FERRY: Ferry = {
   operator: 'Putri Anggreni',
   returnFareMYR: 463,
   fareCovers: '2 adults + 1 infant, return',
   infantFareMYR: 22,
   baggage: '2 pieces up to 20 kg per passenger · excess IDR 15,000/kg',
-  /** Bag drop for the 17:00 sailing home. */
-  checkIn: { opens: hhmm(15, 30), closes: hhmm(16, 30) },
+  checkIn: bagDrop(RETURN_DEPARTS),
   legs: [
     {
       direction: 'out',
@@ -705,7 +738,8 @@ export const FERRY: Ferry = {
       from: 'Harbour Bay, Batam',
       to: 'Puteri Harbour, Malaysia',
       date: '2026-08-25',
-      departs: '17:00',
+      departs: '13:45',
+      requestedDeparts: '17:15',
       departsZone: 'WIB',
     },
   ],
@@ -731,7 +765,7 @@ export const COSTS: Costs = {
       label: 'Terminal & seaport charges',
       lowMYR: 100,
       highMYR: 160,
-      note: 'Cash only. Not included in the ticket.',
+      note: 'Cash only, per person, charged in both directions. Never included in the ticket.',
     },
     { label: 'Ground transport', lowMYR: 124, highMYR: 201 },
     { label: 'Attractions', lowMYR: 40, highMYR: 70 },
@@ -755,7 +789,7 @@ export const WARNINGS: readonly Warning[] = [
   {
     key: 'infant-fare',
     title: 'The infant ferry fare is RM 22 each way, not free',
-    body: "The operator's website only sells adult seats, so hers has to be bought at the Puteri Harbour counter with her passport.",
+    body: "The operator's website only sells adult seats, so hers has to be bought at the Puteri Harbour counter with her passport. Both legs are already paid for — there is nothing to buy again for the way home.",
   },
   {
     key: 'maulid',

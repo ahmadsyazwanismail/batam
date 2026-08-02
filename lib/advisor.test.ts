@@ -75,15 +75,17 @@ describe('the nap is protected', () => {
 });
 
 describe('the last day', () => {
-  it('sends them to the terminal after 15:00', () => {
-    const advice = ask({ now: at('2026-08-25', '15:00') });
+  it('sends them to the terminal once the cutoff passes', () => {
+    // The sailing home is 1:45 pm, so bags shut at 1:15 pm and the day is over
+    // by a quarter to twelve.
+    const advice = ask({ now: at('2026-08-25', '12:30') });
     expect(advice.place).toBeNull();
     expect(advice.reason).toMatch(/Harbour Bay/);
-    expect(advice.reason).toMatch(/4:30 pm/);
+    expect(advice.reason).toMatch(/1:15 pm/);
   });
 
-  it('never suggests anything that cannot be finished by 15:00', () => {
-    for (const time of ['12:00', '13:30', '14:00', '14:30']) {
+  it('never suggests anything that cannot be finished before the cutoff', () => {
+    for (const time of ['11:45', '12:00', '13:30', '14:00']) {
       const advice = ask({ now: at('2026-08-25', time) });
       if (!advice.place) continue;
       const [h, m] = time.split(':').map(Number);

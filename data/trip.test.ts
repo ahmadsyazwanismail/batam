@@ -169,9 +169,16 @@ describe('bookings and ferry', () => {
     expect(FERRY.legs[0].arrivesZone).toBe('WIB');
   });
 
-  it('closes bag check-in an hour before the 17:00 sailing', () => {
-    expect(FERRY.checkIn.opens).toBe(15 * 60 + 30);
-    expect(FERRY.checkIn.closes).toBe(16 * 60 + 30);
+  it('holds the ticket actually booked, not the one asked for', () => {
+    const back = FERRY.legs[1];
+    expect(back.departs).toBe('13:45');
+    // A later sailing has been requested and not granted; nothing plans around it.
+    expect(back.requestedDeparts).toBe('17:15');
+  });
+
+  it('hangs the bag window off whatever the sailing actually is', () => {
+    expect(FERRY.checkIn.opens).toBe(12 * 60 + 15);
+    expect(FERRY.checkIn.closes).toBe(13 * 60 + 15);
   });
 });
 

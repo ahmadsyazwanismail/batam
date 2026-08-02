@@ -42,8 +42,10 @@ describe('fixedPoints', () => {
       'Bag drop for the ferry home',
       'Ferry leaves Harbour Bay',
     ]);
-    expect(points[1]!.clock).toBe('3:30 pm–4:30 pm');
-    expect(points[2]!.clock).toBe('5:00 pm WIB');
+    expect(points[1]!.clock).toBe('12:15 pm–1:15 pm');
+    expect(points[2]!.clock).toBe('1:45 pm WIB');
+    // The later sailing is shown as an ask, never as the plan.
+    expect(points[2]!.detail).toMatch(/5:15 pm requested, not confirmed/);
   });
 
   it('never invents a time that was not booked', () => {

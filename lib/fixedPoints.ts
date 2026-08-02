@@ -62,7 +62,9 @@ export function fixedPoints(day: DayId): readonly FixedPoint[] {
       // and rewriting that into WIB is how people miss boats.
       clock: `${formatMinutes(departs)} ${leg.departsZone}`,
       label: `Ferry leaves ${leg.from.split(',')[0]}`,
-      detail: FERRY.operator,
+      detail: leg.requestedDeparts
+        ? `${FERRY.operator} · ${formatMinutes(parseHhmm(leg.requestedDeparts))} requested, not confirmed`
+        : FERRY.operator,
     });
 
     if (leg.arrives !== undefined) {

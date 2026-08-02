@@ -32,8 +32,17 @@ export const NAP = { from: 13 * 60, to: 15 * 60 };
 export const HEAT = { from: 10 * 60, to: 16 * 60 };
 /** After this, indoors. */
 export const EVENING = 18 * 60;
-/** On the last day everything has to be finished by here. */
-export const LAST_DAY_CUTOFF = 15 * 60;
+/**
+ * On the last day everything has to be finished by here.
+ *
+ * Derived from the ferry rather than written down, because it was 15:00 when
+ * the sailing home was 17:00 and it silently stopped being true the moment
+ * that turned out to be 13:45. Ninety minutes before the bag window shuts is
+ * the same margin the original number had.
+ */
+export const HEAD_HOME_MARGIN_MIN = 90;
+export const LAST_DAY_CUTOFF =
+  (FERRY.checkIn.closes ?? FERRY.checkIn.opens) - HEAD_HOME_MARGIN_MIN;
 /** Door to door to the terminal. */
 export const TERMINAL_TRANSFER_MIN = 25;
 
