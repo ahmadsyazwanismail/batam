@@ -41,6 +41,32 @@ function WeatherGlyph({ code, size = 20 }: { code: number; size?: number }): JSX
   );
 }
 
+/** Feels like / humidity / wind / UV / rain / sunrise / sunset, where known. */
+function Detail({ day }: { day: DayWeather }): JSX.Element | null {
+  const cells: { label: string; value: string }[] = [];
+  if (day.feelsLikeC !== undefined) cells.push({ label: 'Feels like', value: `${day.feelsLikeC}°` });
+  if (day.humidity !== undefined) cells.push({ label: 'Humidity', value: `${day.humidity}%` });
+  if (day.windKph !== undefined) cells.push({ label: 'Wind', value: `${day.windKph} km/h` });
+  if (day.uvIndex !== undefined) {
+    cells.push({ label: 'UV index', value: `${day.uvIndex}${day.uvIndex >= 8 ? ' · very high' : day.uvIndex >= 6 ? ' · high' : ''}` });
+  }
+  if (day.rainMm !== undefined && day.rainMm > 0) cells.push({ label: 'Rain', value: `${day.rainMm} mm` });
+  if (day.sunrise) cells.push({ label: 'Sunrise', value: day.sunrise });
+  if (day.sunset) cells.push({ label: 'Sunset', value: day.sunset });
+  if (cells.length === 0) return null;
+
+  return (
+    <dl className="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-2 border-t-hairline border-rule pt-2.5">
+      {cells.map((c) => (
+        <div key={c.label} className="flex items-baseline justify-between gap-2">
+          <dt className="eyebrow">{c.label}</dt>
+          <dd className="numeric text-caption font-semibold">{c.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 function Line({ day }: { day: DayWeather }): JSX.Element {
   return (
     <>
@@ -111,13 +137,16 @@ export function WeatherCard(): JSX.Element | null {
       <h2 className="eyebrow">Weather</h2>
 
       {now && (
-        <div className="mt-2 flex items-center gap-3 rounded-md border border-hairline border-rule bg-card p-3">
-          <span className="shrink-0" style={{ color: 'var(--accent)' }}>
-            <WeatherGlyph code={now.code} size={26} />
-          </span>
-          <p className="min-w-0 flex-1 text-caption leading-snug">
-            <Line day={now} />
-          </p>
+        <div className="mt-2 rounded-md border border-hairline border-rule bg-card p-3">
+          <div className="flex items-center gap-3">
+            <span className="shrink-0" style={{ color: 'var(--accent)' }}>
+              <WeatherGlyph code={now.code} size={26} />
+            </span>
+            <p className="min-w-0 flex-1 text-caption leading-snug">
+              <Line day={now} />
+            </p>
+          </div>
+          <Detail day={now} />
         </div>
       )}
 

@@ -1,4 +1,5 @@
 import { DAYS } from '@/data/trip';
+import { formatMinutes, parseHhmm } from './time';
 
 /**
  * Weather, from Open-Meteo.
@@ -32,6 +33,19 @@ export interface DayWeather {
   readonly rainChance: number;
   /** True where the code is rain, showers or a thunderstorm. */
   readonly wet: boolean;
+  /**
+   * The rest of it, the way a phone's weather app shows it. All optional:
+   * these come from extra fields on the same request, and a response without
+   * them is still a usable forecast rather than a broken one.
+   */
+  readonly feelsLikeC?: number;
+  readonly humidity?: number;
+  readonly windKph?: number;
+  readonly uvIndex?: number;
+  readonly rainMm?: number;
+  /** "6:05 am" */
+  readonly sunrise?: string;
+  readonly sunset?: string;
 }
 
 export interface Forecast {
@@ -49,6 +63,14 @@ export function forecastUrl(): string {
       'temperature_2m_max',
       'temperature_2m_min',
       'precipitation_probability_max',
+      // The rest of what a phone's weather app puts on a day.
+      'apparent_temperature_max',
+      'relative_humidity_2m_mean',
+      'wind_speed_10m_max',
+      'uv_index_max',
+      'precipitation_sum',
+      'sunrise',
+      'sunset',
     ].join(','),
     // Ask for WIB directly, so the daily buckets line up with the trip's dates.
     timezone: 'Asia/Jakarta',
@@ -98,6 +120,21 @@ export function parseForecast(payload: unknown, fetchedAt: number): Forecast | n
   const lows = d.temperature_2m_min;
   const rain = d.precipitation_probability_max;
 
+  /** Optional extras: absent, short or full of nulls are all the same thing. */
+  const num = (key: string, i: number): number | undefined => {
+    const arr = d[key];
+    return Array.isArray(arr) && typeof arr[i] === 'number' ? (arr[i] as number) : undefined;
+  };
+  const clock = (key: string, i: number): string | undefined => {
+    const arr = d[key];
+    const raw = Array.isArray(arr) ? arr[i] : undefined;
+    // Open-Meteo returns "2026-08-21T06:05" for sunrise and sunset.
+    if (typeof raw !== 'string' || !raw.includes('T')) return undefined;
+    return formatMinutes(parseHhmm(raw.slice(11)));
+  };
+  const round = (v: number | undefined): number | undefined =>
+    v === undefined ? undefined : Math.round(v);
+
   if (
     !Array.isArray(time) ||
     !Array.isArray(codes) ||
@@ -126,6 +163,16 @@ export function parseForecast(payload: unknown, fetchedAt: number): Forecast | n
       lowC: Math.round(low),
       rainChance: Math.round(chance),
       wet,
+      feelsLikeC: round(num('apparent_temperature_max', i)),
+      humidity: round(num('relative_humidity_2m_mean', i)),
+      windKph: round(num('wind_speed_10m_max', i)),
+      uvIndex: round(num('uv_index_max', i)),
+      rainMm: (() => {
+        const mm = num('precipitation_sum', i);
+        return mm === undefined ? undefined : Math.round(mm * 10) / 10;
+      })(),
+      sunrise: clock('sunrise', i),
+      sunset: clock('sunset', i),
     });
   }
 

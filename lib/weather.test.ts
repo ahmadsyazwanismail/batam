@@ -32,6 +32,10 @@ describe('forecastUrl', () => {
     expect(Number(url.searchParams.get('latitude'))).toBeCloseTo(1.1, 1);
     expect(Number(url.searchParams.get('longitude'))).toBeCloseTo(104.03, 1);
     expect(url.searchParams.get('forecast_days')).toBe(String(FORECAST_DAYS));
+    const daily = url.searchParams.get('daily') ?? '';
+    for (const field of ['apparent_temperature_max', 'uv_index_max', 'sunrise', 'sunset']) {
+      expect(daily, field).toContain(field);
+    }
     // If this ever needs a key the whole choice of provider was wrong.
     expect(url.search).not.toMatch(/key|token|appid/i);
   });
@@ -50,6 +54,52 @@ describe('describeCode', () => {
     for (const code of [4, 30, 79, 88, 199]) {
       expect(describeCode(code).summary.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('the richer fields', () => {
+  const rich = {
+    daily: {
+      ...payload.daily,
+      apparent_temperature_max: [35.4, 34.1, 33.2],
+      relative_humidity_2m_mean: [78.6, 81.2, 84.9],
+      wind_speed_10m_max: [14.3, 11.8, 19.4],
+      uv_index_max: [9.2, 7.1, 5.4],
+      precipitation_sum: [0, 3.44, 21.7],
+      sunrise: ['2026-08-21T06:05', '2026-08-22T06:05', '2026-08-23T06:06'],
+      sunset: ['2026-08-21T18:22', '2026-08-22T18:22', '2026-08-23T18:21'],
+    },
+  };
+
+  it('reads everything a phone weather app shows', () => {
+    const day = parseForecast(rich, 0)!.days[0]!;
+    expect(day.feelsLikeC).toBe(35);
+    expect(day.humidity).toBe(79);
+    expect(day.windKph).toBe(14);
+    expect(day.uvIndex).toBe(9);
+    expect(day.sunrise).toBe('6:05 am');
+    expect(day.sunset).toBe('6:22 pm');
+  });
+
+  it('keeps rain to one decimal, because 21.7 mm and 22 mm are different days', () => {
+    const days = parseForecast(rich, 0)!.days;
+    expect(days[1]!.rainMm).toBe(3.4);
+    expect(days[2]!.rainMm).toBe(21.7);
+    expect(days[0]!.rainMm).toBe(0);
+  });
+
+  it('leaves them undefined rather than zero when the response omits them', () => {
+    const day = parseForecast(payload, 0)!.days[0]!;
+    expect(day.feelsLikeC).toBeUndefined();
+    expect(day.humidity).toBeUndefined();
+    expect(day.sunrise).toBeUndefined();
+    // The forecast itself is still perfectly usable.
+    expect(day.highC).toBe(31);
+  });
+
+  it('ignores a sunrise that is not a timestamp', () => {
+    const bent = { daily: { ...rich.daily, sunrise: ['06:05', null, 42] } };
+    expect(parseForecast(bent, 0)!.days[0]!.sunrise).toBeUndefined();
   });
 });
 
