@@ -8,6 +8,8 @@ import {
   WET_ENOUGH_TO_STAY_IN,
   type DayWeather,
 } from '@/lib/weather';
+import { useClimate } from '@/lib/useClimate';
+import { describeNormal, normalFor } from '@/lib/climate';
 import { formatTripDate, wibDate } from '@/lib/time';
 import { DAYS } from '@/data/trip';
 
@@ -64,6 +66,11 @@ export function WeatherCard(): JSX.Element | null {
   const today = wibDate(new Date());
   const forecast = weather.status === 'ready' ? weather.forecast : null;
   const outlook = tripOutlook(forecast, today);
+  // Any trip day the forecast does not reach falls back to what these dates
+  // have actually been like. Only fetched while there is a gap to fill.
+  const gaps = DAYS.some((d) => !forDate(forecast, d.date));
+  const climate = useClimate(gaps);
+  const normals = climate.status === 'ready' ? climate.climate : null;
   // Today's own weather is only worth a card while you are actually there.
   // Three weeks out, "31° in Batam right now" is trivia sitting on top of the
   // question you opened this for, which is what the trip is going to be like.
@@ -83,7 +90,11 @@ export function WeatherCard(): JSX.Element | null {
     );
   }
 
-  if (weather.status === 'unavailable') {
+  // A failed forecast used to end the section here, which also threw away the
+  // history — and the history is exactly what is worth having when the
+  // forecast cannot be reached. Only bail out when there is nothing of either.
+  const nothingAtAll = weather.status === 'unavailable' && !normals;
+  if (nothingAtAll && climate.status !== 'loading') {
     return (
       <section className="px-gutter pt-7">
         <h2 className="eyebrow">Weather</h2>
@@ -110,42 +121,62 @@ export function WeatherCard(): JSX.Element | null {
         </div>
       )}
 
-      {outlook.kind === 'waiting' && (
-        <p className="mt-1.5 text-caption leading-relaxed text-muted">
-          Nothing to forecast yet — a forecast reaches {FORECAST_DAYS} days ahead,
-          so the trip comes into range in about{' '}
-          {outlook.daysUntilForecast === 1 ? 'a day' : `${outlook.daysUntilForecast} days`}.
-        </p>
-      )}
-
-      {outlook.kind !== 'waiting' && (
-        <ul className="mt-2 overflow-hidden rounded-md border border-hairline border-rule bg-card [&>li:last-child]:border-b-0">
-          {DAYS.map((day) => {
-            const w = outlook.days.find((d) => d.date === day.date);
-            return (
-              <li
-                key={day.id}
-                className="flex items-center gap-3 border-b-hairline border-rule px-3 py-2.5"
-              >
-                <span className="numeric w-[86px] shrink-0 text-eyebrow font-bold uppercase text-muted">
-                  {formatTripDate(day.date)}
+      <ul className="mt-2 overflow-hidden rounded-md border border-hairline border-rule bg-card [&>li:last-child]:border-b-0">
+        {DAYS.map((day) => {
+          const w = forDate(forecast, day.date);
+          const normal = normalFor(normals, day.date);
+          return (
+            <li
+              key={day.id}
+              className="flex items-center gap-3 border-b-hairline border-rule px-3 py-2.5"
+            >
+              <span className="numeric w-[86px] shrink-0 text-eyebrow font-bold uppercase text-muted">
+                {formatTripDate(day.date)}
+              </span>
+              {w ? (
+                <>
+                  <span className="shrink-0 text-muted">
+                    <WeatherGlyph code={w.code} size={18} />
+                  </span>
+                  <span className="min-w-0 flex-1 text-caption leading-snug">
+                    <Line day={w} />
+                  </span>
+                </>
+              ) : normal ? (
+                <span className="min-w-0 flex-1 text-caption leading-snug text-muted">
+                  {describeNormal(normal)}
                 </span>
-                {w ? (
-                  <>
-                    <span className="shrink-0 text-muted">
-                      <WeatherGlyph code={w.code} size={18} />
-                    </span>
-                    <span className="min-w-0 flex-1 text-caption leading-snug">
-                      <Line day={w} />
-                    </span>
-                  </>
-                ) : (
-                  <span className="flex-1 text-caption text-muted">Too far out to say</span>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+              ) : (
+                <span className="flex-1 text-caption text-muted">
+                  {climate.status === 'loading' ? 'Looking it up…' : 'Nothing recorded'}
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+
+      {outlook.kind !== 'full' && (
+        <p className="mt-1.5 text-caption leading-relaxed text-muted">
+          {weather.status === 'unavailable'
+            ? 'No forecast right now — that part needs a signal'
+            : outlook.kind === 'waiting'
+              ? 'No forecast reaches this far yet'
+              : 'The later days are past where a forecast reaches'}{' '}
+          — a forecast goes {FORECAST_DAYS} days ahead
+          {outlook.kind === 'waiting' &&
+            `, so the trip comes into range in about ${
+              outlook.daysUntilForecast === 1 ? 'a day' : `${outlook.daysUntilForecast} days`
+            }`}
+          .{' '}
+          {normals && (
+            <>
+              Until then those days show what actually happened on the same dates
+              from {normals.fromYear} to {normals.toYear}. That is history, not a
+              prediction.
+            </>
+          )}
+        </p>
       )}
 
       {weather.status === 'ready' && weather.stale && (

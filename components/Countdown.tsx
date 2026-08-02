@@ -9,7 +9,7 @@ import { formatTripDate } from '@/lib/time';
  */
 export function Countdown({ days }: { days: number }): JSX.Element {
   return (
-    <div className="border border-hairline border-rule bg-card p-5">
+    <div className="rounded-md border border-hairline border-rule bg-card p-5">
       <p className="eyebrow">Departure in</p>
       <p className="numeric mt-2 flex items-baseline gap-3">
         <span

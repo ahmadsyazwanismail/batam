@@ -55,7 +55,7 @@ export function DaysScreen(): JSX.Element {
               <Link
                 href={`/days/${day.id}`}
                 aria-current={isToday ? 'page' : undefined}
-                className={`tap block border bg-card p-3.5 transition-opacity ${
+                className={`tap block rounded-md border bg-card p-3.5 transition-opacity ${
                   isPast ? 'opacity-55' : ''
                 }`}
                 style={{

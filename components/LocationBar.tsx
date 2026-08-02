@@ -40,7 +40,7 @@ export function LocationBar({
     }
 
     return (
-      <div className="border border-hairline border-rule bg-card p-4">
+      <div className="rounded-md border border-hairline border-rule bg-card p-4">
         <p className="font-semibold tracking-[-0.01em]">Find what is near me</p>
         <p className="mt-1 text-caption leading-relaxed text-muted">
           Distances are {origin.label} right now. Turn on location and they
@@ -88,7 +88,7 @@ export function LocationBar({
 function Status({ children }: { children: React.ReactNode }): JSX.Element {
   return (
     <p
-      className="border-l-[3px] bg-card py-2 pl-3 pr-2 text-caption leading-relaxed text-muted"
+      className="rounded-md border-l-[3px] bg-card py-2 pl-3 pr-2 text-caption leading-relaxed text-muted"
       style={{ borderColor: 'var(--accent)' }}
       role="status"
     >

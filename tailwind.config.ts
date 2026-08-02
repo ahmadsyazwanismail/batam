@@ -74,7 +74,15 @@ const config: Config = {
       },
       borderRadius: {
         // Makan is softer than the transit system it replaced — food wants
-        // warmth, not signage precision. Pills stay `rounded-full`.
+        // warmth, not signage precision.
+        //
+        // One radius per job, so corners never look accidental:
+        //   sm    thumbnails and the small tiles inside a card
+        //   md    every card, panel, list box and input — the common case
+        //   sheet the bottom sheet and the day-complete card
+        //   full  chips and pills
+        // `DEFAULT` is buttons, via `.btn`. Nothing should be square except
+        // full-bleed chrome — the tab bar and the sheet's own grab strip.
         none: '0',
         sm: '6px',
         DEFAULT: '10px',
