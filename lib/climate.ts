@@ -143,8 +143,24 @@ export function normalFor(climate: Climate | null, date: string): ClimateNormal 
   return climate?.normals.find((n) => n.date === date) ?? null;
 }
 
-/** "usually 31° / 25°, rain in 6 years out of 10" */
+/**
+ * "usually 31° / 25° · rained 6 of the last 10 years"
+ *
+ * The earlier wording was "rain in 6 of the last 10", which does not say ten
+ * *what* — days, years, or forecasts. On a row already labelled with a date,
+ * the only reading that helps is the one spelled out.
+ */
 export function describeNormal(normal: ClimateNormal): string {
-  const wetCount = Math.round((normal.wetYears / 100) * normal.years);
-  return `usually ${normal.highC}° / ${normal.lowC}°, rain in ${wetCount} of the last ${normal.years}`;
+  const wetCount = wetYearCount(normal);
+  const years = `${normal.years} year${normal.years === 1 ? '' : 's'}`;
+  const rain =
+    wetCount === 0
+      ? `dry every one of the last ${years}`
+      : `rained ${wetCount} of the last ${years}`;
+  return `usually ${normal.highC}° / ${normal.lowC}° · ${rain}`;
+}
+
+/** How many of the sampled years actually had rain on this date. */
+export function wetYearCount(normal: ClimateNormal): number {
+  return Math.round((normal.wetYears / 100) * normal.years);
 }
