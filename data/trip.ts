@@ -30,8 +30,12 @@ export type MinutesOfDay = number;
 export interface OpeningHours {
   /** Inclusive. */
   readonly opens: MinutesOfDay;
-  /** Exclusive. */
-  readonly closes: MinutesOfDay;
+  /**
+   * Exclusive, and only where it is actually known. Pink Beach and Morning
+   * Bakery came with an opening time and nothing else, so they have none — the
+   * app says "from 12:30" rather than inventing a shutter time.
+   */
+  readonly closes?: MinutesOfDay;
 }
 
 /**
@@ -521,7 +525,7 @@ const PLACE_DATA = [
     category: 'beach',
     line: 4,
     note: 'opens 12:30pm · ~RM12 pax',
-    opening: { opens: hhmm(12, 30), closes: hhmm(22) },
+    opening: { opens: hhmm(12, 30) },
   },
   {
     key: 'ranahminang',
@@ -582,7 +586,7 @@ const PLACE_DATA = [
     category: 'food',
     line: 5,
     note: 'Harbour Bay branch · opens 6am',
-    opening: { opens: hhmm(6), closes: hhmm(22) },
+    opening: { opens: hhmm(6) },
   },
 ] as const satisfies readonly Place[];
 

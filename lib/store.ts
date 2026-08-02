@@ -44,17 +44,27 @@ export const useTrip = create<TripState>()(
 /**
  * Zustand rehydrates from localStorage after mount, so anything reading the
  * store has to wait a tick or the server and client markup disagree.
+ *
+ * The `persist` API is absent when there is no localStorage at all — which is
+ * every prerendered page at build time, and a browser with storage blocked. In
+ * both cases there is nothing to wait for, so this reports hydrated and the
+ * store simply runs in memory.
  */
 export function useHydrated(): boolean {
-  const [hydrated, setHydrated] = useState(() => useTrip.persist.hasHydrated());
+  const persistApi = useTrip.persist as typeof useTrip.persist | undefined;
+  const [hydrated, setHydrated] = useState(() => persistApi?.hasHydrated() ?? false);
 
   useEffect(() => {
-    if (useTrip.persist.hasHydrated()) {
+    if (!persistApi) {
       setHydrated(true);
       return;
     }
-    return useTrip.persist.onFinishHydration(() => setHydrated(true));
-  }, []);
+    if (persistApi.hasHydrated()) {
+      setHydrated(true);
+      return;
+    }
+    return persistApi.onFinishHydration(() => setHydrated(true));
+  }, [persistApi]);
 
   return hydrated;
 }

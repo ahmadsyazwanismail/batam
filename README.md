@@ -90,7 +90,7 @@ The brief lists ten steps. Done so far:
 
 - [x] 1 · Data module and types, haversine and distance-verdict helpers, unit tests
 - [x] 2 · Shell: bottom tab bar, routing, design tokens
-- [ ] 3 · Strip map component
+- [x] 3 · Strip map component, station sheet, derived running order
 - [ ] 4 · Places index with search and filter
 - [ ] 5 · Location: permission flow, live distances, fallbacks
 - [ ] 6 · MapLibre map screen
@@ -101,3 +101,28 @@ The brief lists ten steps. Done so far:
 
 Today, Lines and Costs render real data. Map and Places are placeholders that say which
 step fills them in.
+
+## The running order is derived, not scheduled
+
+The trip data has no per-place times, and none are invented. `lib/route.ts` builds a
+*sequence* for each day and the strip map draws it. The rules, in order:
+
+1. **Where the day starts.** A ferry that lands today beats a hotel you check out of
+   today, which beats the hotel you woke up in. That last one is why the Radisson opens
+   days three and four despite belonging to line 2 — that is what an interchange is.
+2. **Bags first.** A hotel you check into today comes straight after the opening stop.
+3. **Except for what you cross on the way.** A `land` stop that sits roughly on the
+   straight line to that hotel is visited en route, which is how Barelang Bridges stay
+   between the terminal and the Harris. Only `land` qualifies; a mall on the same road
+   is still a detour when you are carrying four bags and a toddler.
+4. **Morning before afternoon.** Anything shut until midday is routed into the back half
+   of the day, so Pink Beach can never open one.
+5. **Then nearest-neighbour**, run separately over each half, so consecutive stops are
+   near each other rather than bouncing across the island.
+6. **Where the day ends.** Only the ferry home qualifies.
+
+The only clock times shown anywhere are real: the ferry, the bag check-in window, and
+published opening hours. A place with no published hours gets no time at all, and a
+place that came with an opening time and no closing time says "from 12:30" rather than
+guessing a shutter. The screen says "a suggested order, not a timetable" because that
+is what it is.

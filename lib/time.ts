@@ -1,4 +1,4 @@
-import { LINES, TRIP, type Line, type MinutesOfDay } from '@/data/trip';
+import { LINES, TRIP, type Line, type MinutesOfDay, type OpeningHours } from '@/data/trip';
 
 /**
  * Batam time.
@@ -89,13 +89,22 @@ export function activeLine(now: Date = new Date()): Line {
 }
 
 export function isOpenAt(
-  opening: { opens: MinutesOfDay; closes: MinutesOfDay } | undefined,
+  opening: OpeningHours | undefined,
   minutes: MinutesOfDay,
 ): boolean {
   // No hours recorded means we do not know, and pretending otherwise would
   // send someone across town to a shutter.
   if (!opening) return true;
-  return minutes >= opening.opens && minutes < opening.closes;
+  if (minutes < opening.opens) return false;
+  // A missing closing time means it was never given, not that it never shuts.
+  return opening.closes === undefined || minutes < opening.closes;
+}
+
+/** "09:00–18:00", or "from 12:30" when only the opening time is known. */
+export function formatOpening(opening: OpeningHours): string {
+  return opening.closes === undefined
+    ? `from ${formatMinutes(opening.opens)}`
+    : `${formatMinutes(opening.opens)}–${formatMinutes(opening.closes)}`;
 }
 
 /** "Fri 21 Aug" */

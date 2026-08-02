@@ -1,9 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Card, Screen, SectionHeading } from '@/components/Screen';
 import { LineBadge } from '@/components/LineBadge';
+import { StripMap } from '@/components/StripMap';
+import { runningOrder } from '@/lib/route';
 import { Countdown } from '@/components/Countdown';
 import { PackingList } from '@/components/PackingList';
 import { requirePlace, FERRY, LINES, WARNINGS } from '@/data/trip';
@@ -156,10 +159,21 @@ function DuringTheTrip({
         <Card className="p-4">
           <p className="eyebrow">Still to build</p>
           <p className="mt-2 text-caption leading-relaxed text-muted">
-            The running order, the nearest-to-you strip and the advisor land in
-            steps 3 to 7. The shell, the data and the clock are done.
+            The nearest-to-you strip and the advisor land in steps 5 and 7.
           </p>
         </Card>
+      </div>
+
+      <SectionHeading>Today’s running order</SectionHeading>
+      <StripMap line={line.id} stations={runningOrder(line.id)} />
+
+      <div className="px-gutter pt-5">
+        <Link
+          href={`/lines/${line.id}`}
+          className="tap inline-flex items-center text-caption font-semibold"
+        >
+          Open the {line.name} line →
+        </Link>
       </div>
     </>
   );
