@@ -142,20 +142,34 @@ Lighthouse mobile, on the production build:
 
 | Route | Performance | Accessibility |
 | --- | --- | --- |
-| `/` | 96 | 100 |
-| `/places` | 95 | 100 |
+| `/` | 90–95 | 100 |
+| `/places` | 97 | 100 |
 | `/lines/4` | 98 | 100 |
 | `/costs` | 98 | 100 |
-| `/map` | 90 | 96 |
+| `/map` | 85–93 | 100 |
 
 Zero axe violations (WCAG 2.1 A and AA) on all six routes, and no horizontal overflow at
 390, 414 or 768 px.
 
-The one thing `/map` is flagged for is **target spacing**: the pins are 44×44 as required,
-but real places 400 m apart overlap at the default zoom, so their hit areas touch. That is
-inherent to plotting 33 true coordinates on one screen, it is the case WCAG 2.5.8 exempts
-for content-determined positions, and zooming separates them. Its 96 is still above the
-stated bar.
+Performance is quoted as a range because it is a range: repeated runs on the same build
+and the same machine vary by several points, and `/map` in particular straddles 90 —
+five consecutive runs gave 93, 85, 92, 89, 92. That last few points is MapLibre's own
+start-up, not anything the app does around it. Worth re-measuring on your own hardware
+before treating any single number as the truth.
+
+## Pins cluster
+
+Fifteen of the thirty-three stops sit within a couple of kilometres of Nagoya, so at the
+opening zoom they piled up: unreadable, and their 44px hit areas overlapped so you could
+not reliably tap the one you meant. `lib/cluster.ts` groups them by where they land on the
+glass — screen pixels, not degrees, because the same two places need grouping at zoom 11
+and not at zoom 16. Tapping a group zooms to where it comes apart.
+
+A group is anchored on its seed point rather than its members' centroid. Seeds are
+guaranteed to be at least a radius apart, so bubbles never collide; centroids have no such
+guarantee and two groups can drift into each other, which is the exact problem clustering
+was there to solve. A group takes its line's colour when every member shares a day, and ink
+when it spans more than one — the colour still means "which day", or says nothing.
 
 ## Two things worth your judgement
 

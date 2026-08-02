@@ -5,6 +5,7 @@ import maplibregl, { type Map as MapLibreMap, type Marker } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { lineById, MAP_PLACES, type Category, type LineId, type Place } from '@/data/trip';
 import { MAP_BOUNDS, MAP_STYLE } from '@/lib/mapStyle';
+import { clusterByScreen, CLUSTER_RADIUS_PX, type Cluster, type ScreenPoint } from '@/lib/cluster';
 import type { LatLon } from '@/lib/geo';
 
 /**
@@ -38,6 +39,11 @@ export function MapCanvas({
     new Map(),
   );
   const youMarker = useRef<Marker | null>(null);
+  const clusterMarkers = useRef<Marker[]>([]);
+  /** Re-run clustering after something other than a pan changes what is shown. */
+  const regroup = useRef<(() => void) | null>(null);
+  /** Re-apply the filter opacities once the markers exist. */
+  const applyFilters = useRef<(() => void) | null>(null);
 
   // --- create once --------------------------------------------------------
   useEffect(() => {
@@ -58,26 +64,36 @@ export function MapCanvas({
     instance.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     map.current = instance;
 
+    // Building 33 markers is a few milliseconds of DOM work, but it lands in
+    // the same long task as MapLibre's own start-up and pushes total blocking
+    // time over the line. Wait for the map to finish loading first — nothing
+    // can be tapped before then anyway.
     const created = markers.current;
-    for (const place of MAP_PLACES) {
-      const element = buildPin(place);
-      element.addEventListener('click', (e) => {
-        e.stopPropagation();
-        onSelect(place.key);
-      });
-      const marker = new maplibregl.Marker({ element, anchor: 'bottom' })
-        .setLngLat([place.lon, place.lat])
-        .addTo(instance);
-      // MapLibre stamps every custom marker with aria-label="Map marker",
-      // which would leave 33 identically named buttons on the screen. Put the
-      // real name back after it has had its way.
-      element.setAttribute('aria-label', `${place.name}, line ${place.line}`);
-      created.set(place.key, { marker, element });
-    }
+    instance.once('load', () => {
+      for (const place of MAP_PLACES) {
+        const element = buildPin(place);
+        element.addEventListener('click', (e) => {
+          e.stopPropagation();
+          onSelect(place.key);
+        });
+        const marker = new maplibregl.Marker({ element, anchor: 'bottom' })
+          .setLngLat([place.lon, place.lat])
+          .addTo(instance);
+        // MapLibre stamps every custom marker with aria-label="Map marker",
+        // which would leave 33 identically named buttons on the screen. Put the
+        // real name back after it has had its way.
+        element.setAttribute('aria-label', `${place.name}, line ${place.line}`);
+        created.set(place.key, { marker, element });
+      }
+      applyFilters.current?.();
+      regroup.current?.();
+    });
 
     return () => {
       created.forEach(({ marker }) => marker.remove());
       created.clear();
+      clusterMarkers.current.forEach((m) => m.remove());
+      clusterMarkers.current = [];
       youMarker.current?.remove();
       youMarker.current = null;
       instance.remove();
@@ -87,20 +103,109 @@ export function MapCanvas({
 
   // --- filters: fade, never remove ---------------------------------------
   useEffect(() => {
-    for (const place of MAP_PLACES) {
-      const entry = markers.current.get(place.key);
-      if (!entry) continue;
+    const apply = () => {
+      for (const place of MAP_PLACES) {
+        const entry = markers.current.get(place.key);
+        if (!entry) continue;
 
-      const onLine = selectedLines.size === 0 || selectedLines.has(place.line);
-      const inCategory =
-        selectedCategories.size === 0 || selectedCategories.has(place.category);
-      const dimmed = !onLine || !inCategory;
+        const onLine = selectedLines.size === 0 || selectedLines.has(place.line);
+        const inCategory =
+          selectedCategories.size === 0 || selectedCategories.has(place.category);
+        const dimmed = !onLine || !inCategory;
 
-      entry.element.style.opacity = dimmed ? '0.15' : '1';
-      entry.element.style.pointerEvents = dimmed ? 'none' : 'auto';
-      entry.element.style.zIndex = dimmed ? '0' : '1';
-    }
+        entry.element.style.opacity = dimmed ? '0.15' : '1';
+        entry.element.style.pointerEvents = dimmed ? 'none' : 'auto';
+        entry.element.style.zIndex = dimmed ? '0' : '1';
+      }
+    };
+    applyFilters.current = apply;
+    apply();
+    regroup.current?.();
+    return () => {
+      applyFilters.current = null;
+    };
   }, [selectedLines, selectedCategories]);
+
+  // --- clustering ---------------------------------------------------------
+  // Fifteen stops sit within a couple of kilometres of Nagoya, so at the
+  // opening zoom they pile up: unreadable, and their hit areas overlap so you
+  // cannot tap the one you meant. Group them by where they land on the glass.
+  useEffect(() => {
+    const instance = map.current;
+    if (!instance) return;
+
+    const run = () => {
+      const visible: ScreenPoint[] = [];
+      for (const place of MAP_PLACES) {
+        const entry = markers.current.get(place.key);
+        if (!entry) continue;
+        // A dimmed pin is not tappable, so it never pulls anything into a group.
+        if (entry.element.style.opacity === '0.15') continue;
+        const { x, y } = instance.project([place.lon, place.lat]);
+        visible.push({ key: place.key, x, y, line: place.line });
+      }
+
+      const clusters = clusterByScreen(visible, CLUSTER_RADIUS_PX);
+
+      // Clear last pass.
+      clusterMarkers.current.forEach((m) => m.remove());
+      clusterMarkers.current = [];
+      markers.current.forEach(({ element }) => {
+        if (element.dataset.grouped === 'true') {
+          element.style.display = '';
+          delete element.dataset.grouped;
+        }
+      });
+
+      for (const cluster of clusters) {
+        if (cluster.keys.length < 2) continue;
+
+        for (const key of cluster.keys) {
+          const entry = markers.current.get(key);
+          if (!entry) continue;
+          entry.element.style.display = 'none';
+          entry.element.dataset.grouped = 'true';
+        }
+
+        const lngLat = instance.unproject([cluster.x, cluster.y]);
+        const element = buildCluster(cluster);
+        element.addEventListener('click', (e) => {
+          e.stopPropagation();
+          // Zoom to where the group comes apart rather than a fixed step.
+          instance.easeTo({
+            center: lngLat,
+            zoom: Math.min(17, instance.getZoom() + 1.8),
+            duration: 450,
+          });
+        });
+        const clusterMarker = new maplibregl.Marker({ element, anchor: 'center' })
+          .setLngLat(lngLat)
+          .addTo(instance);
+        // As with the pins: MapLibre overwrites aria-label on add, so the real
+        // one goes back afterwards. It has to start with the number the bubble
+        // shows, or the visible label and the accessible name disagree.
+        element.setAttribute('aria-label', clusterLabel(cluster));
+        clusterMarkers.current.push(clusterMarker);
+      }
+    };
+
+    // One pass per frame at most: moveend and zoomend both fire on a pinch.
+    let frame = 0;
+    const schedule = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(run);
+    };
+
+    regroup.current = schedule;
+    instance.on('moveend', schedule);
+    instance.on('zoomend', schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      instance.off('moveend', schedule);
+      instance.off('zoomend', schedule);
+      regroup.current = null;
+    };
+  }, []);
 
   // --- you ----------------------------------------------------------------
   useEffect(() => {
@@ -185,6 +290,45 @@ function buildPin(place: Place): HTMLElement {
         ${GLYPH[place.category]}
       </g>
     </svg>`;
+  return el;
+}
+
+/**
+ * A group. Line-coloured when every member shares a day, ink when it spans
+ * more than one — the colour still means "which day", or says nothing.
+ */
+function clusterLabel(cluster: Cluster): string {
+  // Begins with the number the bubble shows, so the visible label is contained
+  // in the accessible name (WCAG 2.5.3).
+  return `${cluster.keys.length} stops here${
+    cluster.line ? `, line ${cluster.line}` : ', across several lines'
+  }. Zoom in to separate them.`;
+}
+
+function buildCluster(cluster: Cluster): HTMLElement {
+  const colour = cluster.line ? lineById(cluster.line).colour : '#16181C';
+  const onColour = cluster.line ? lineById(cluster.line).onColour : '#FBFAF6';
+
+  const el = document.createElement('button');
+  el.type = 'button';
+  el.setAttribute('aria-label', clusterLabel(cluster));
+  el.style.cssText = [
+    'width:44px',
+    'height:44px',
+    'padding:0',
+    'border:0',
+    'background:transparent',
+    'cursor:pointer',
+    'display:flex',
+    'align-items:center',
+    'justify-content:center',
+  ].join(';');
+  el.innerHTML = `
+    <span style="display:flex;align-items:center;justify-content:center;
+      width:34px;height:34px;border-radius:9999px;background:${colour};
+      color:${onColour};font-weight:700;font-size:15px;line-height:1;
+      font-variant-numeric:tabular-nums;box-shadow:0 0 0 3px #F4F3EE"
+      aria-hidden="true">${cluster.keys.length}</span>`;
   return el;
 }
 

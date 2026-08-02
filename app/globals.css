@@ -87,7 +87,9 @@
 .maplibregl-ctrl-attrib-button {
   width: 44px !important;
   height: 44px !important;
-  background-size: 20px 20px;
+  background-size: 20px 20px !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
 }
 .maplibregl-ctrl-group {
   border-radius: 0 !important;
