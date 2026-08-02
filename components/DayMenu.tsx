@@ -33,6 +33,10 @@ export function DayMenu({
   const done = useTrip((s) => s.done);
   const hydrated = useHydrated();
 
+  // A course with nothing in it and nothing included has nothing to say. Four
+  // of those in a row — which is exactly what arrival day is — reads as a bug.
+  const courses = menu.courses.filter((c) => c.places.length > 0 || Boolean(c.included));
+
   const stations = runningOrder(day);
   const openStation = openKey
     ? (stations.find((s) => s.place.key === openKey) ?? null)
@@ -46,15 +50,21 @@ export function DayMenu({
         animate="show"
         key={day}
       >
-        {menu.courses.map((course) => (
-          <CourseBlock
-            key={course.meal.key}
-            course={course}
-            from={from}
-            done={hydrated ? done : []}
-            onOpen={setOpenKey}
-          />
-        ))}
+        {courses.length > 0 ? (
+          courses.map((course) => (
+            <CourseBlock
+              key={course.meal.key}
+              course={course}
+              from={from}
+              done={hydrated ? done : []}
+              onOpen={setOpenKey}
+            />
+          ))
+        ) : (
+          <p className="px-gutter pt-6 text-caption text-muted">
+            No meals planned on this day — you are travelling through most of it.
+          </p>
+        )}
 
         {menu.between.length > 0 && (
           <motion.section variants={stationVariants} className="px-gutter pt-7">
@@ -114,7 +124,6 @@ function CourseBlock({
   onOpen: (key: string) => void;
 }): JSX.Element {
   const { meal, places, included } = course;
-  const empty = places.length === 0;
 
   return (
     <motion.section variants={stationVariants} className="px-gutter pt-6">
@@ -137,10 +146,6 @@ function CourseBlock({
           />
           {included}
         </p>
-      )}
-
-      {empty && !included && (
-        <p className="mt-1.5 text-caption text-muted">Nothing planned — the day is yours.</p>
       )}
 
       <ul className="mt-2.5 flex flex-col gap-2">

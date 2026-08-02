@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Screen } from '@/components/Screen';
 import { DayMenu } from '@/components/DayMenu';
+import { FixedPoints } from '@/components/FixedPoints';
 import { DayComplete } from '@/components/DayComplete';
 import { LocationBar } from '@/components/LocationBar';
 import { DAYS, dayById, requirePlace, type DayId } from '@/data/trip';
-import { formatTripDate } from '@/lib/time';
+import { dayMenu } from '@/lib/meals';
+import { formatTripDate, wibDate } from '@/lib/time';
 import { useLocation } from '@/lib/useLocation';
 
 export function DayScreen({ day }: { day: DayId }): JSX.Element {
@@ -32,6 +34,16 @@ export function DayScreen({ day }: { day: DayId }): JSX.Element {
     );
   }
 
+  // Looking at a day you are not on, with no live fix, the app used to say
+  // "distances are from the Radisson" directly under "based at the Harris".
+  // On another day the honest reference point is that day's own base.
+  const isToday = wibDate(now) === info.date;
+  const live = location.origin.kind === 'you';
+  const from = live || isToday ? location.origin.point : { lat: base.lat, lon: base.lon };
+  const hasCourses = dayMenu(day).courses.some(
+    (c) => c.places.length > 0 || Boolean(c.included),
+  );
+
   return (
     <>
       <Screen
@@ -41,16 +53,26 @@ export function DayScreen({ day }: { day: DayId }): JSX.Element {
         <p className="px-gutter text-caption text-muted">Based at {base.name}</p>
 
         <div className="mt-3 px-gutter">
-          <LocationBar location={location} compact />
+          {live || isToday ? (
+            <LocationBar location={location} compact />
+          ) : (
+            <p className="text-caption leading-snug text-muted">
+              Distances are from {base.name}, where you are based this day.
+            </p>
+          )}
         </div>
 
-        <DayMenu day={day} from={location.origin.point} />
+        <FixedPoints day={day} />
 
-        <p className="px-gutter pt-7 text-caption leading-relaxed text-muted">
-          A suggested order, not a booking. Which course a place lands in comes
-          from its opening hours and from your own notes — “order am” is a
-          breakfast, “pumpkin donuts” is tea, nasi padang is lunch.
-        </p>
+        <DayMenu day={day} from={from} />
+
+        {hasCourses && (
+          <p className="px-gutter pt-7 text-caption leading-relaxed text-muted">
+            A suggested order, not a booking. Which course a place lands in comes
+            from its opening hours and from your own notes — “order am” is a
+            breakfast, “pumpkin donuts” is tea, nasi padang is lunch.
+          </p>
+        )}
 
         <nav className="flex items-center justify-between gap-3 px-gutter pt-6">
           {day > 1 ? (

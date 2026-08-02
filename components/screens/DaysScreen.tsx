@@ -46,6 +46,9 @@ export function DaysScreen(): JSX.Element {
             has: c.places.length > 0 || Boolean(c.included),
           }));
           const doneCount = courses.filter((c) => c.filled).length;
+          // Arrival day has no meals on it at all, so "0 of 4" would be a
+          // score against a total that was never really there.
+          const totalCount = courses.filter((c) => c.has).length;
 
           return (
             <motion.li key={day.id} variants={stationVariants}>
@@ -69,9 +72,9 @@ export function DaysScreen(): JSX.Element {
                     {isToday ? ' · today' : ''}
                   </span>
                   {isPast && (
-                    <span className="eyebrow" aria-label="finished">
-                      Done
-                    </span>
+                    // "Done" here meant "the date has gone", but it sat one
+                    // line above "0 of 4 courses done" and read as a claim.
+                    <span className="eyebrow">Past</span>
                   )}
                 </div>
 
@@ -91,7 +94,9 @@ export function DaysScreen(): JSX.Element {
                   ))}
                 </div>
                 <p className="numeric mt-1.5 text-eyebrow font-bold uppercase text-muted">
-                  {doneCount} of 4 courses done
+                  {totalCount === 0
+                    ? 'A travelling day'
+                    : `${doneCount} of ${totalCount} courses done`}
                 </p>
               </Link>
             </motion.li>
