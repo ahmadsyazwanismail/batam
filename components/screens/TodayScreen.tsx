@@ -10,6 +10,9 @@ import { Advisor } from '@/components/Advisor';
 import { NearestStrip } from '@/components/NearestStrip';
 import { LocationBar } from '@/components/LocationBar';
 import { DayComplete } from '@/components/DayComplete';
+import { UpNext } from '@/components/UpNext';
+import { PrayerCard } from '@/components/PrayerCard';
+import { LineProgress } from '@/components/LineProgress';
 import { runningOrder } from '@/lib/route';
 import { useLocation } from '@/lib/useLocation';
 import { Countdown } from '@/components/Countdown';
@@ -44,7 +47,7 @@ export function TodayScreen(): JSX.Element {
       title={<TodayTitle phase={phase} />}
       trailing={<Clock now={now} />}
     >
-      {phase.phase === 'before' && <BeforeTheTrip phase={phase} />}
+      {phase.phase === 'before' && <BeforeTheTrip phase={phase} now={now} />}
       {phase.phase === 'during' && <DuringTheTrip phase={phase} now={now} />}
       {phase.phase === 'after' && <AfterTheTrip />}
     </Screen>
@@ -85,8 +88,10 @@ function TodaySkeleton(): JSX.Element {
 
 function BeforeTheTrip({
   phase,
+  now,
 }: {
   phase: Extract<TripPhase, { phase: 'before' }>;
+  now: Date;
 }): JSX.Element {
   const outbound = FERRY.legs[0];
 
@@ -136,6 +141,11 @@ function BeforeTheTrip({
 
       <SectionHeading>Packing</SectionHeading>
       <PackingList />
+
+      <SectionHeading>Prayer times on Batam</SectionHeading>
+      <div className="px-gutter">
+        <PrayerCard now={now} from={requirePlace('radisson')} />
+      </div>
     </>
   );
 }
@@ -155,12 +165,16 @@ function DuringTheTrip({
     <>
       <div className="flex items-center gap-3 px-gutter">
         <LineBadge line={line.id} size="lg" shared />
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="eyebrow">
             Day {dayNumber} of {LINES.length} · {formatTripDate(line.date)}
           </p>
-          <p className="mt-1 font-semibold">Based at {base.name}</p>
+          <p className="mt-1 text-body font-semibold">Based at {base.name}</p>
         </div>
+      </div>
+
+      <div className="mt-4 px-gutter">
+        <LineProgress line={line.id} />
       </div>
 
       {/* Job one: what should we do now. It goes above everything else. */}
@@ -172,7 +186,14 @@ function DuringTheTrip({
         <LocationBar location={location} compact />
       </div>
 
+      <UpNext now={now} from={location.origin.point} />
+
       <NearestStrip from={location.origin.point} now={now} label={location.origin.label} />
+
+      <SectionHeading>Prayer</SectionHeading>
+      <div className="px-gutter">
+        <PrayerCard now={now} from={location.origin.point} />
+      </div>
 
       <SectionHeading>Today’s running order</SectionHeading>
       <StripMap line={line.id} stations={runningOrder(line.id)} />

@@ -45,11 +45,17 @@ const config: Config = {
         ],
       },
       fontSize: {
-        // Transit signage: numbers set large, tight and bold.
-        eyebrow: ['0.6875rem', { lineHeight: '1rem', letterSpacing: '0.12em' }],
-        caption: ['0.75rem', { lineHeight: '1.1rem', letterSpacing: '0.04em' }],
-        display: ['2.75rem', { lineHeight: '1', letterSpacing: '-0.035em' }],
-        'display-lg': ['3.75rem', { lineHeight: '0.94', letterSpacing: '-0.04em' }],
+        // Transit signage: numbers set large, tight and bold. Tracking opens up
+        // as the type gets smaller and closes as it gets larger — the thing that
+        // separates typography that has been set from typography that has been
+        // typed.
+        eyebrow: ['0.6875rem', { lineHeight: '1rem', letterSpacing: '0.14em' }],
+        caption: ['0.8125rem', { lineHeight: '1.25rem', letterSpacing: '0.005em' }],
+        body: ['0.9375rem', { lineHeight: '1.45rem', letterSpacing: '-0.005em' }],
+        lede: ['1.0625rem', { lineHeight: '1.5rem', letterSpacing: '-0.012em' }],
+        title: ['1.375rem', { lineHeight: '1.6rem', letterSpacing: '-0.022em' }],
+        display: ['2.625rem', { lineHeight: '0.98', letterSpacing: '-0.04em' }],
+        'display-lg': ['4rem', { lineHeight: '0.9', letterSpacing: '-0.045em' }],
       },
       borderRadius: {
         // Mostly square. Pills are the deliberate exception, and they are `rounded-full`.
@@ -61,10 +67,12 @@ const config: Config = {
         sheet: '14px',
       },
       borderWidth: {
-        hairline: '1px',
+        // A true hairline on a retina screen. `1px` is two device pixels on a
+        // phone and reads as a drawn line; this reads as an edge.
+        hairline: '0.5px',
       },
       spacing: {
-        gutter: '1rem',
+        gutter: '1.25rem',
         tabbar: '4.25rem',
         'safe-b': 'env(safe-area-inset-bottom)',
       },

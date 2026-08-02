@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { LottieMoment } from './LottieMoment';
+import { Logo } from './Logo';
 import { usePrefersReducedMotion } from '@/lib/motion';
 
 const SEEN = 'batam-splash-seen';
@@ -53,11 +54,11 @@ export function Splash(): JSX.Element | null {
           onPointerDown={dismiss}
           aria-hidden
         >
-          <div className="w-40">
+          <div className="w-36">
             <LottieMoment name="splash" loop={false} />
           </div>
-          <p className="mt-2 text-[1.5rem] font-bold tracking-[-0.03em]">Batam Lines</p>
-          <p className="eyebrow mt-1">21–25 Aug 2026</p>
+          <Logo size={40} className="mt-1" />
+          <p className="eyebrow mt-3 text-muted">21–25 Aug 2026 · 5 lines</p>
         </motion.div>
       )}
     </AnimatePresence>

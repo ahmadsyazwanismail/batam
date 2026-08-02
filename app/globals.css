@@ -37,6 +37,28 @@
     /* The whole app is one column on a phone. Nothing scrolls sideways except
        the map, which asks for it explicitly. */
     overflow-x: hidden;
+    font-size: 0.9375rem;
+    line-height: 1.45rem;
+    letter-spacing: -0.005em;
+    /* Real grotesques have proper alternates; ask for them where they exist. */
+    font-feature-settings: 'cv05' 1, 'cv08' 1, 'ss03' 1;
+  }
+
+  /* A grain so faint you would only notice it by its absence. It stops the
+     large flat areas of paper from reading as "unstyled white" and gives the
+     surface something to be. Inline SVG turbulence — no image request. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    /* Behind everything, without forcing a stacking context onto the page
+       content. Promoting #main above the grain wrapped the map's WebGL canvas
+       in its own stacking context and cost the map screen five Lighthouse
+       points. The grain goes underneath instead. */
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
   /* Focus is always visible, and always visible against paper. */
@@ -71,7 +93,19 @@
 
   .numeric {
     font-variant-numeric: tabular-nums;
-    font-feature-settings: 'tnum' 1;
+    font-feature-settings: 'tnum' 1, 'cv05' 1;
+  }
+
+  /* A ticket edge. Used where the app wants to feel like something printed
+     rather than something rendered — the trip summary, the day header. */
+  .perforated {
+    background-image: radial-gradient(
+      circle at 3px 50%,
+      var(--paper) 2.5px,
+      transparent 2.6px
+    );
+    background-size: 10px 100%;
+    background-repeat: repeat-x;
   }
 }
 
