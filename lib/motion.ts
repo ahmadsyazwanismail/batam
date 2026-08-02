@@ -25,14 +25,33 @@ export const SHEET_SPRING: Transition = {
   mass: 0.8,
 };
 
-/** Tab changes: a short horizontal slide, under 250 ms. */
-export const TAB_TRANSITION: Transition = {
-  duration: 0.22,
-  ease: [0.2, 0.8, 0.2, 1],
+/**
+ * Arriving on a screen. Decelerating, so it settles rather than stopping.
+ */
+export const PAGE_ENTER: Transition = {
+  duration: 0.24,
+  ease: [0.16, 1, 0.3, 1],
 };
 
-/** Stations stagger in from the top, ~40 ms apart. */
-export const STATION_STAGGER = 0.04;
+/**
+ * Leaving one. Half the arrival and opacity only — with `mode="wait"` this
+ * time is spent staring at a screen you have already left, so it is the one
+ * duration in the app worth minimising rather than shaping.
+ */
+export const PAGE_EXIT: Transition = {
+  duration: 0.11,
+  ease: [0.4, 0, 1, 1],
+};
+
+/**
+ * List items stagger in from the top.
+ *
+ * 40 ms felt right on a day's half-dozen stops and awful on the Places list,
+ * where thirty-three of them meant the last row arrived a second and a third
+ * after the first. It runs behind the page transition, so the two were adding
+ * up into what reads as a slow app.
+ */
+export const STATION_STAGGER = 0.022;
 
 export const listVariants: Variants = {
   hidden: {},
@@ -40,8 +59,8 @@ export const listVariants: Variants = {
 };
 
 export const stationVariants: Variants = {
-  hidden: { opacity: 0, y: -8 },
-  show: { opacity: 1, y: 0, transition: SPRING },
+  hidden: { opacity: 0, y: -6 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } },
 };
 
 export function usePrefersReducedMotion(): boolean {
