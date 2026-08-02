@@ -75,6 +75,26 @@
   }
 }
 
+/* MapLibre ships 29px controls. Everything in this app is at least 44px, and
+   the zoom buttons are the ones you press with a child on your hip. */
+.maplibregl-ctrl-group button {
+  width: 44px !important;
+  height: 44px !important;
+}
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  background-size: 20px 20px;
+}
+.maplibregl-ctrl-attrib-button {
+  width: 44px !important;
+  height: 44px !important;
+  background-size: 20px 20px;
+}
+.maplibregl-ctrl-group {
+  border-radius: 0 !important;
+  border: 1px solid var(--rule);
+  box-shadow: none !important;
+}
+
 /* Every animation in the app is opt-out, in one place. */
 @media (prefers-reduced-motion: reduce) {
   *,

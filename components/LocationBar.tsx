@@ -10,10 +10,35 @@ import type { LocationApi } from '@/lib/useLocation';
  * explanation of what the distances below are measured from — never a silent
  * fallback, because a wrong distance looks exactly like a right one.
  */
-export function LocationBar({ location }: { location: LocationApi }): JSX.Element {
+export function LocationBar({
+  location,
+  compact = false,
+}: {
+  location: LocationApi;
+  /** On the map, the map is the content — this shrinks to one row. */
+  compact?: boolean;
+}): JSX.Element {
   const { permission, origin, error, ask, fix } = location;
 
   if (permission === 'idle') {
+    if (compact) {
+      return (
+        <div className="flex items-center gap-3">
+          <p className="min-w-0 flex-1 text-caption leading-snug text-muted">
+            Distances are {origin.label}.
+          </p>
+          <button
+            type="button"
+            onClick={ask}
+            className="tap shrink-0 px-3 py-2 text-caption font-semibold text-card"
+            style={{ backgroundColor: 'var(--line-text)' }}
+          >
+            Use my location
+          </button>
+        </div>
+      );
+    }
+
     return (
       <div className="border border-hairline border-rule bg-card p-4">
         <p className="font-semibold tracking-[-0.01em]">Find what is near me</p>

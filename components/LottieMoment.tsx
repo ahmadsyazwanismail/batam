@@ -1,13 +1,20 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Lottie from 'lottie-react';
+import dynamic from 'next/dynamic';
 import {
   celebrateAnimation,
   emptyAnimation,
   splashAnimation,
 } from '@/data/lottie';
 import { usePrefersReducedMotion } from '@/lib/motion';
+
+// lottie-web is ~250 kB and exists for three decorative moments, so it is
+// fetched only when one of them actually happens.
+const LottiePlayer = dynamic(() => import('./LottiePlayer'), {
+  ssr: false,
+  loading: () => null,
+});
 
 export type Moment = 'splash' | 'empty' | 'celebrate';
 
@@ -46,13 +53,11 @@ export function LottieMoment({
   if (!colour) return null;
 
   return (
-    <Lottie
+    <LottiePlayer
       animationData={BUILDERS[name](colour)}
       loop={reduced ? false : loop}
       autoplay={!reduced}
       onComplete={onComplete}
-      aria-hidden
-      role="presentation"
     />
   );
 }

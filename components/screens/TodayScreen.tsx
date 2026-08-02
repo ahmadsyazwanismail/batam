@@ -6,10 +6,15 @@ import { motion } from 'framer-motion';
 import { Card, Screen, SectionHeading } from '@/components/Screen';
 import { LineBadge } from '@/components/LineBadge';
 import { StripMap } from '@/components/StripMap';
+import { Advisor } from '@/components/Advisor';
+import { NearestStrip } from '@/components/NearestStrip';
+import { LocationBar } from '@/components/LocationBar';
+import { DayComplete } from '@/components/DayComplete';
 import { runningOrder } from '@/lib/route';
+import { useLocation } from '@/lib/useLocation';
 import { Countdown } from '@/components/Countdown';
 import { PackingList } from '@/components/PackingList';
-import { requirePlace, FERRY, LINES, WARNINGS } from '@/data/trip';
+import { requirePlace, FERRY, LINES, MAP_PLACES, WARNINGS } from '@/data/trip';
 import { formatTripDate, mytClock, tripPhase, wibClock, type TripPhase } from '@/lib/time';
 import { listVariants, stationVariants } from '@/lib/motion';
 
@@ -40,7 +45,7 @@ export function TodayScreen(): JSX.Element {
       trailing={<Clock now={now} />}
     >
       {phase.phase === 'before' && <BeforeTheTrip phase={phase} />}
-      {phase.phase === 'during' && <DuringTheTrip phase={phase} />}
+      {phase.phase === 'during' && <DuringTheTrip phase={phase} now={now} />}
       {phase.phase === 'after' && <AfterTheTrip />}
     </Screen>
   );
@@ -137,11 +142,14 @@ function BeforeTheTrip({
 
 function DuringTheTrip({
   phase,
+  now,
 }: {
   phase: Extract<TripPhase, { phase: 'during' }>;
+  now: Date;
 }): JSX.Element {
   const { line, dayNumber } = phase;
   const base = requirePlace(line.base);
+  const location = useLocation(now);
 
   return (
     <>
@@ -155,14 +163,16 @@ function DuringTheTrip({
         </div>
       </div>
 
-      <div className="mt-6 px-gutter">
-        <Card className="p-4">
-          <p className="eyebrow">Still to build</p>
-          <p className="mt-2 text-caption leading-relaxed text-muted">
-            The nearest-to-you strip and the advisor land in steps 5 and 7.
-          </p>
-        </Card>
+      {/* Job one: what should we do now. It goes above everything else. */}
+      <div className="mt-5 px-gutter">
+        <Advisor now={now} from={location.origin.point} />
       </div>
+
+      <div className="mt-3 px-gutter">
+        <LocationBar location={location} compact />
+      </div>
+
+      <NearestStrip from={location.origin.point} now={now} label={location.origin.label} />
 
       <SectionHeading>Today’s running order</SectionHeading>
       <StripMap line={line.id} stations={runningOrder(line.id)} />
@@ -175,6 +185,8 @@ function DuringTheTrip({
           Open the {line.name} line →
         </Link>
       </div>
+
+      <DayComplete line={line.id} />
     </>
   );
 }
@@ -185,8 +197,8 @@ function AfterTheTrip(): JSX.Element {
       <Card className="p-4">
         <p className="font-semibold">That was the trip.</p>
         <p className="mt-2 text-caption leading-relaxed text-muted">
-          Five lines, thirty-eight stations, one hotel move. Everything is still
-          here to look back at.
+          Five lines, {MAP_PLACES.length} stops, one hotel move. Everything is
+          still here to look back at.
         </p>
       </Card>
     </div>
