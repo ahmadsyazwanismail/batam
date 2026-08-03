@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { dayMenu, type Course } from '@/lib/meals';
 import { directionsUrl, formatKm, haversineKm, type LatLon } from '@/lib/geo';
@@ -10,7 +11,15 @@ import { useHydrated, useTrip } from '@/lib/store';
 import { listVariants, stationVariants, usePrefersReducedMotion } from '@/lib/motion';
 import { PlaceField } from './PlaceField';
 import { PlaceSheet } from './PlaceSheet';
+
+import { asPlace, isSavedKey, savedOnDay } from '@/lib/savedPlaces';
 import type { DayId } from '@/data/trip';
+
+// Only reached by tapping one of your own places, which most days have none of.
+const SavedPlaceSheet = dynamic(
+  () => import('./SavedPlaceSheet').then((m) => m.SavedPlaceSheet),
+  { ssr: false },
+);
 
 /**
  * A day, as four courses.
@@ -31,16 +40,21 @@ export function DayMenu({
   const [openKey, setOpenKey] = useState<string | null>(null);
   const reduced = usePrefersReducedMotion();
   const done = useTrip((s) => s.done);
+  const allSaved = useTrip((s) => s.saved);
   const hydrated = useHydrated();
+
+  const mine = hydrated ? savedOnDay(allSaved, day) : [];
 
   // A course with nothing in it and nothing included has nothing to say. Four
   // of those in a row — which is exactly what arrival day is — reads as a bug.
   const courses = menu.courses.filter((c) => c.places.length > 0 || Boolean(c.included));
 
   const stations = runningOrder(day);
-  const openStation = openKey
-    ? (stations.find((s) => s.place.key === openKey) ?? null)
-    : null;
+  const openStation =
+    openKey && !isSavedKey(openKey)
+      ? (stations.find((s) => s.place.key === openKey) ?? null)
+      : null;
+  const openSaved = openKey ? (mine.find((p) => p.key === openKey) ?? null) : null;
 
   return (
     <>
@@ -103,6 +117,48 @@ export function DayMenu({
             </ul>
           </motion.section>
         )}
+        {mine.length > 0 && (
+          // Its own block, below the plan, on purpose. Dropping these into the
+          // courses would mean the app deciding that somewhere it knows nothing
+          // about is lunch — and the meal slots are derived from the trip data,
+          // not guessed. This section claims only what you told it.
+          <motion.section variants={stationVariants} className="px-gutter pt-7">
+            <h2 className="eyebrow">Yours, on this day</h2>
+            <ul className="mt-2 grid grid-cols-2 gap-2">
+              {mine.map((place) => {
+                const isDone = done.includes(place.key);
+                return (
+                  <li key={place.key}>
+                    <button
+                      type="button"
+                      onClick={() => setOpenKey(place.key)}
+                      className="tap flex w-full items-center gap-2.5 rounded border border-hairline p-2.5 text-left"
+                      style={{ borderColor: 'var(--accent)', backgroundColor: 'var(--card)' }}
+                    >
+                      <PlaceField
+                        place={asPlace(place)}
+                        glyphSize={16}
+                        className="h-9 w-9 shrink-0 rounded-sm"
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span
+                          className={`block text-caption font-semibold leading-snug ${
+                            isDone ? 'text-muted line-through' : ''
+                          }`}
+                        >
+                          {place.name}
+                        </span>
+                        <span className="numeric mt-0.5 block text-eyebrow text-muted">
+                          {formatKm(haversineKm(from, place))}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </motion.section>
+        )}
       </motion.div>
 
       <PlaceSheet
@@ -111,6 +167,13 @@ export function DayMenu({
         from={from}
         onClose={() => setOpenKey(null)}
       />
+
+      {/* No edit here on purpose: this sheet is for reading one place while
+          you read the day. Changing it belongs on Places or the Map, where the
+          list and the pin you are changing are in front of you. */}
+      {openSaved && (
+        <SavedPlaceSheet place={openSaved} from={from} onClose={() => setOpenKey(null)} />
+      )}
     </>
   );
 }

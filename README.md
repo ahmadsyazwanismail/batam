@@ -53,6 +53,38 @@ data/       trip.ts — the entire trip, typed. The only source of truth.
 
 `data/trip.ts` is the file to read first. Everything else is a view of it.
 
+## Adding a place on the trip
+
+`data/trip.ts` is the trip **as booked**, and nothing writes to it at runtime. Places
+found on the ground go somewhere else: `lib/savedPlaces.ts`, persisted to localStorage
+through the same store as the tick list. They are kept visibly separate everywhere —
+their own pin shape, a "Yours" tag in the list, their own block at the foot of a day —
+so the app never blurs "we booked this" into "we might go here".
+
+There is no backend and no geocoder, so the app cannot look a place up by name. The
+three ways to get a coordinate onto a phone with nothing behind it all work offline:
+
+| How | When you would use it |
+| --- | --- |
+| Paste a link | You found it in Google Maps. `lib/parseLocation.ts` reads Google, Apple, Waze, OSM, `geo:` and bare coordinates. |
+| Use my location | You are standing in it. |
+| Drop a pin | You can see it but it is not on any map. The map moves under a fixed crosshair, because your thumb covers the spot you are aiming at. |
+
+Two details in the parser earn their tests. A Google link carries the place **and** the
+camera — `!3d…!4d…` is the pin, `@lat,lon` is where the map was looking, and they differ
+by streets if you panned before copying, so the pin wins. And a shortened
+`maps.app.goo.gl` link carries no coordinates at all; following it needs a connection
+and Google blocks the request from a browser, so the app says so and points at "Drop a
+pin" rather than failing blankly.
+
+A place you add can be given a day, or left without one. Left without one it stays out
+of every day filter and out of every day's plan — that is a real answer, not a missing
+one, and defaulting it to a day would be the app deciding your itinerary. Given a day,
+it appears under "Yours, on this day" at the foot of that day, deliberately **not**
+folded into the four meal courses: which course a place lands in is derived from the
+trip data (`lib/meals.ts`), and the app knows nothing about somewhere you just heard
+about.
+
 ## Notes on the data
 
 Some places sit **inside** a mall and get no map pin of their own — Chikuro, Top 100,

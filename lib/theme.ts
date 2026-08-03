@@ -38,6 +38,12 @@ export interface ThemeTokens {
   readonly accent: string;
   /** Text on top of an accent fill. */
   readonly onAccent: string;
+  /**
+   * Something is wrong, or about to be destroyed. Used as words and as a
+   * border, never as a fill — nothing in this app is important enough to shout.
+   * Held to the normal-text bar on both grounds like any other text colour.
+   */
+  readonly warn: string;
   /** The four meal colours as *shapes* — bars, dots, fills. */
   readonly meal: Readonly<Record<'sarapan' | 'tengahari' | 'petang' | 'malam', string>>;
   /** The same four as *words*. Different values: text has a higher bar. */
@@ -55,6 +61,9 @@ export const LIGHT: ThemeTokens = {
   // Jade, deep enough to be read as text as well as used as a fill.
   accent: '#1F5D4C',
   onAccent: '#FFFFFF',
+  // An earthy brick rather than a system red, so it belongs to the same family
+  // as the bone and the jade.
+  warn: '#AA2E24',
   meal: {
     sarapan: '#E39B3C',
     tengahari: '#C2410C',
@@ -82,6 +91,8 @@ export const DARK: ThemeTokens = {
   accent: '#5FC9A6',
   // …which makes it a light fill, so its label goes dark.
   onAccent: '#0D1512',
+  // The same brick, lifted until it reads on a green-black ground.
+  warn: '#F2A08F',
   meal: {
     sarapan: '#E8A64B',
     tengahari: '#FF8A5B',

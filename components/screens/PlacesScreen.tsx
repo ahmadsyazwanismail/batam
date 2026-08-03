@@ -1,12 +1,14 @@
 'use client';
 
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { Screen } from '@/components/Screen';
 import { LocationBar } from '@/components/LocationBar';
 import { FilterChips } from '@/components/FilterChips';
 import { Distance } from '@/components/Distance';
 import { PlaceField } from '@/components/PlaceField';
 import { PlaceSheet } from '@/components/PlaceSheet';
+import { draftFrom, EMPTY_DRAFT, type DraftState } from '@/components/addPlaceDraft';
 import { EmptyState } from '@/components/EmptyState';
 import {
   MAP_PLACES,
@@ -22,6 +24,20 @@ import { useLocation } from '@/lib/useLocation';
 import { wibDate } from '@/lib/time';
 import { useHydrated, useTrip } from '@/lib/store';
 import { usePrefersReducedMotion } from '@/lib/motion';
+import { asPlace, isSavedKey, savedSearchTerms, type SavedPlace } from '@/lib/savedPlaces';
+import { stashDraft } from '@/lib/draftHandoff';
+
+// Neither sheet exists until you ask for one, and between them they pull in
+// the whole form and a second detail panel. Loading them with the list cost
+// this screen three Lighthouse points for markup nobody had asked to see.
+const AddPlaceSheet = dynamic(
+  () => import('@/components/AddPlaceSheet').then((m) => m.AddPlaceSheet),
+  { ssr: false },
+);
+const SavedPlaceSheet = dynamic(
+  () => import('@/components/SavedPlaceSheet').then((m) => m.SavedPlaceSheet),
+  { ssr: false },
+);
 
 /**
  * Every place, searchable.
@@ -36,7 +52,10 @@ export function PlacesScreen(): JSX.Element {
   const [lines, setLines] = useState<ReadonlySet<DayId>>(new Set());
   const [categories, setCategories] = useState<ReadonlySet<Category>>(new Set());
   const [openKey, setOpenKey] = useState<string | null>(null);
-  const listTop = useRef<HTMLParagraphElement | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState<DraftState>(EMPTY_DRAFT);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const listTop = useRef<HTMLDivElement | null>(null);
   const filterBar = useRef<HTMLDivElement | null>(null);
   const filtersTouched = useRef(false);
   const reduced = usePrefersReducedMotion();
@@ -68,7 +87,17 @@ export function PlacesScreen(): JSX.Element {
 
   const location = useLocation(now ?? new Date());
   const done = useTrip((s) => s.done);
+  const allSaved = useTrip((s) => s.saved);
+  const addSaved = useTrip((s) => s.addSaved);
+  const updateSaved = useTrip((s) => s.updateSaved);
+  const removeSaved = useTrip((s) => s.removeSaved);
   const hydrated = useHydrated();
+
+  // Nothing from localStorage may be rendered before rehydration, or the
+  // prerendered markup and the first client render disagree. Memoised because
+  // a fresh `[]` on every render is a new dependency identity, which would
+  // rebuild the row list on every render rather than when something changed.
+  const savedPlaces = useMemo(() => (hydrated ? allSaved : []), [hydrated, allSaved]);
 
   const isoDate = now ? wibDate(now) : undefined;
   const origin = location.origin;
@@ -76,17 +105,39 @@ export function PlacesScreen(): JSX.Element {
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
 
-    return MAP_PLACES.map((place) => {
+    const curated = MAP_PLACES.map((place) => {
       const km = haversineKm(origin.point, place);
       return {
         place,
+        saved: null as SavedPlace | null,
         km,
         verdict: distanceVerdict(km, isoDate),
         matchesQuery: q === '' || searchTerms(place).some((t) => t.includes(q)),
         matchesCategory: categories.size === 0 || categories.has(place.category),
         onSelectedLine: lines.size === 0 || lines.has(place.day),
       };
-    })
+    });
+
+    // Yours, in the same list and sorted by the same rule — the question this
+    // screen answers is "what is near me", and something you added yesterday is
+    // as near as anything booked in March.
+    const mine = savedPlaces.map((place) => {
+      const km = haversineKm(origin.point, place);
+      return {
+        place: asPlace(place),
+        saved: place,
+        km,
+        verdict: distanceVerdict(km, isoDate),
+        matchesQuery: q === '' || savedSearchTerms(place).some((t) => t.includes(q)),
+        matchesCategory: categories.size === 0 || categories.has(place.category),
+        // A place with no day yet answers to no day filter. It is not on a day,
+        // and putting it under one you picked would be the app deciding for you.
+        onSelectedLine:
+          lines.size === 0 || (place.day !== null && lines.has(place.day)),
+      };
+    });
+
+    return [...curated, ...mine]
       .filter((row) => row.matchesQuery && row.matchesCategory)
       // A day filter promotes rather than dims. It used to grey the other
       // rows where they stood, which kept the shape of the trip visible and
@@ -100,7 +151,7 @@ export function PlacesScreen(): JSX.Element {
             ? -1
             : 1,
       );
-  }, [origin.point, isoDate, query, categories, lines]);
+  }, [origin.point, isoDate, query, categories, lines, savedPlaces]);
 
   const visible = rows.filter((r) => r.onSelectedLine);
   const categoriesPresent = useMemo(
@@ -109,12 +160,25 @@ export function PlacesScreen(): JSX.Element {
   );
 
   const openStation = useMemo((): { station: Station; line: DayId } | null => {
-    if (!openKey) return null;
+    if (!openKey || isSavedKey(openKey)) return null;
     const place = MAP_PLACES.find((p) => p.key === openKey);
     if (!place) return null;
     const station = runningOrder(place.day).find((s) => s.place.key === openKey);
     return station ? { station, line: place.day } : null;
   }, [openKey]);
+
+  const openSaved = useMemo(
+    () => (openKey ? (savedPlaces.find((p) => p.key === openKey) ?? null) : null),
+    [openKey, savedPlaces],
+  );
+
+  const editing = editingId ? (savedPlaces.find((p) => p.id === editingId) ?? null) : null;
+
+  const closeAdd = (): void => {
+    setAdding(false);
+    setEditingId(null);
+    setDraft(EMPTY_DRAFT);
+  };
 
   // Everything below depends on the clock and on where the phone is. This page
   // is prerendered at build time, so rendering any of it before mount would
@@ -170,23 +234,45 @@ export function PlacesScreen(): JSX.Element {
         />
       </div>
 
-      <p
-        ref={listTop}
-        className="numeric px-gutter pb-1 pt-3 text-caption text-muted"
-      >
-        {visible.length} of {MAP_PLACES.length} · {origin.label}
-      </p>
+      {/* Add sits on the count line rather than above the list or at the foot
+          of it: no extra vertical band in a screen that is already a sticky
+          header over a long list, and still in reach without scrolling. */}
+      <div ref={listTop} className="flex items-baseline justify-between gap-3 px-gutter pb-1 pt-3">
+        <p className="numeric text-caption text-muted">
+          {visible.length} of {MAP_PLACES.length + savedPlaces.length} · {origin.label}
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setEditingId(null);
+            setDraft(EMPTY_DRAFT);
+            setAdding(true);
+          }}
+          className="tap -my-2 shrink-0 py-2 text-caption font-semibold text-accent"
+        >
+          + Add a place
+        </button>
+      </div>
 
       {rows.length === 0 ? (
+        // A search that finds nothing is the exact moment you have heard of
+        // somewhere the app does not know about, so the offer is to add it
+        // under the name you already typed rather than to clear the box.
         <EmptyState
           title="Nothing matches"
           body={
             query
-              ? `Nothing answers to “${query.trim()}”. Mall tenants count — try “Chikuro” or “Zhuko”.`
+              ? `Nothing answers to “${query.trim()}”. Mall tenants count — try “Chikuro” or “Zhuko”. Or put it on the map yourself.`
               : 'Nothing is in every category you picked.'
           }
-          actionLabel="Clear the filters"
+          actionLabel={query ? `Add “${query.trim()}”` : 'Clear the filters'}
           onAction={() => {
+            if (query.trim()) {
+              setEditingId(null);
+              setDraft({ ...EMPTY_DRAFT, name: query.trim() });
+              setAdding(true);
+              return;
+            }
             setQuery('');
             setCategories(new Set());
             setLines(new Set());
@@ -200,13 +286,17 @@ export function PlacesScreen(): JSX.Element {
                   Without it the promoted rows just look like a reordering. */}
               {!row.onSelectedLine && rows[i - 1]?.onSelectedLine && (
                 <li className="rule-t px-gutter pb-1 pt-4">
-                  <p className="eyebrow">Other days</p>
+                  {/* Not "Other days": a place you added without picking a day
+                      is not on another day, it is on no day, and it lands here
+                      too. */}
+                  <p className="eyebrow">Everything else</p>
                 </li>
               )}
               <PlaceRow
                 place={row.place}
                 km={row.km}
                 verdict={row.verdict.text}
+                mine={row.saved !== null}
                 done={hydrated && done.includes(row.place.key)}
                 onOpen={() => setOpenKey(row.place.key)}
               />
@@ -221,6 +311,51 @@ export function PlacesScreen(): JSX.Element {
         from={location.origin.point}
         onClose={() => setOpenKey(null)}
       />
+
+      {openSaved && (
+      <SavedPlaceSheet
+        place={openSaved}
+        from={location.origin.point}
+        onEdit={() => {
+          if (!openSaved) return;
+          setEditingId(openSaved.id);
+          setDraft(draftFrom(openSaved));
+          setOpenKey(null);
+          setAdding(true);
+        }}
+        onClose={() => setOpenKey(null)}
+      />
+      )}
+
+      {adding && (
+      <AddPlaceSheet
+        open={adding}
+        draft={draft}
+        onDraftChange={setDraft}
+        editing={editing}
+        location={location}
+        // No map on this screen to hand the crosshair to, so "Drop a pin"
+        // carries the half-filled form over to the one that has it.
+        onPickOnMap={() => {
+          stashDraft(draft);
+          window.location.href = '/map#add';
+        }}
+        onSave={(next) => {
+          if (editingId) updateSaved(editingId, next);
+          else setOpenKey(addSaved(next).key);
+          closeAdd();
+        }}
+        onDelete={
+          editingId
+            ? () => {
+                removeSaved(editingId);
+                closeAdd();
+              }
+            : undefined
+        }
+        onClose={closeAdd}
+      />
+      )}
     </Screen>
   );
 }
@@ -238,12 +373,15 @@ function PlaceRow({
   place,
   km,
   verdict,
+  mine,
   done,
   onOpen,
 }: {
   place: Place;
   km: number;
   verdict: string;
+  /** Added on the trip rather than booked. Marked, never hidden. */
+  mine: boolean;
   done: boolean;
   onOpen: () => void;
 }): JSX.Element {
@@ -264,7 +402,15 @@ function PlaceRow({
           >
             {place.name}
           </span>
-          <span className="mt-0.5 block text-caption text-muted">{place.note}</span>
+          <span className="mt-0.5 block text-caption text-muted">
+            {mine && (
+              // Never blurs into the booked trip: a row you added says so on
+              // its own line, in the accent, before whatever note you gave it.
+              <span className="font-semibold text-accent">Yours</span>
+            )}
+            {mine && place.note ? ' · ' : ''}
+            {place.note}
+          </span>
         </span>
 
         <span className="shrink-0 text-right">

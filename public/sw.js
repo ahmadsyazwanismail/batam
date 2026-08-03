@@ -14,7 +14,7 @@
  * is compiled into the bundle and needs no network at all.
  */
 
-const VERSION = 'v2';
+const VERSION = 'v3';
 const APP_CACHE = `batam-app-${VERSION}`;
 const TILE_CACHE = `batam-tiles-${VERSION}`;
 const MAX_TILES = 700;

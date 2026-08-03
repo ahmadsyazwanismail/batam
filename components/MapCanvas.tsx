@@ -7,6 +7,7 @@ import { dayById, MAP_PLACES, type Category, type DayId, type Place } from '@/da
 import { MAP_BOUNDS, mapStyle } from '@/lib/mapStyle';
 import { clusterByScreen, CLUSTER_RADIUS_PX, type Cluster, type ScreenPoint } from '@/lib/cluster';
 import type { LatLon } from '@/lib/geo';
+import type { SavedPlace } from '@/lib/savedPlaces';
 
 /**
  * The real map.
@@ -32,16 +33,22 @@ function isDark(): boolean {
 export function MapCanvas({
   selectedDays,
   selectedCategories,
+  saved,
   you,
   accuracy,
   onSelect,
+  onCentreChange,
   focus,
 }: {
   selectedDays: ReadonlySet<DayId>;
   selectedCategories: ReadonlySet<Category>;
+  /** Places added on the trip. Drawn as rings, so they never read as booked. */
+  saved: readonly SavedPlace[];
   you: LatLon | null;
   accuracy: number | null;
   onSelect: (key: string) => void;
+  /** Reports where the middle of the glass is, for the crosshair picker. */
+  onCentreChange?: (point: LatLon) => void;
   /** Recentre on this place when it changes. */
   focus: string | null;
 }): JSX.Element {
@@ -50,6 +57,7 @@ export function MapCanvas({
   const markers = useRef<Map<string, { marker: Marker; element: HTMLElement }>>(
     new Map(),
   );
+  const savedMarkers = useRef<Map<string, Marker>>(new Map());
   const youMarker = useRef<Marker | null>(null);
   const clusterMarkers = useRef<Marker[]>([]);
   /** Re-run clustering after something other than a pan changes what is shown. */
@@ -100,6 +108,7 @@ export function MapCanvas({
     // is working without signal. The pins need nothing from the network; they
     // must not wait on it.
     const created = markers.current;
+    const mine = savedMarkers.current;
     const frame = requestAnimationFrame(() => {
       for (const place of MAP_PLACES) {
         const element = buildPin(place);
@@ -126,6 +135,8 @@ export function MapCanvas({
       cancelAnimationFrame(frame);
       created.forEach(({ marker }) => marker.remove());
       created.clear();
+      mine.forEach((m) => m.remove());
+      mine.clear();
       clusterMarkers.current.forEach((m) => m.remove());
       clusterMarkers.current = [];
       youMarker.current?.remove();
@@ -241,6 +252,66 @@ export function MapCanvas({
     };
   }, []);
 
+  // --- places you added ---------------------------------------------------
+  // Unlike the 38 curated pins, these change while the app is running, so this
+  // reconciles rather than building once. Diffed by key so adding a place does
+  // not tear down and rebuild every other marker underneath the map.
+  useEffect(() => {
+    const instance = map.current;
+    if (!instance) return;
+
+    const live = savedMarkers.current;
+    const wanted = new Set(saved.map((s) => s.key));
+
+    for (const [key, marker] of live) {
+      if (!wanted.has(key)) {
+        marker.remove();
+        live.delete(key);
+      }
+    }
+
+    for (const place of saved) {
+      const existing = live.get(place.key);
+      if (existing) {
+        existing.setLngLat([place.lon, place.lat]);
+        continue;
+      }
+      const element = buildSavedPin(place);
+      element.addEventListener('click', (e) => {
+        e.stopPropagation();
+        onSelect(place.key);
+      });
+      const marker = new maplibregl.Marker({ element, anchor: 'bottom' })
+        .setLngLat([place.lon, place.lat])
+        .addTo(instance);
+      element.setAttribute('aria-label', `${place.name}, added by you`);
+      live.set(place.key, marker);
+    }
+  }, [saved, onSelect]);
+
+  // --- where the middle of the glass is -----------------------------------
+  // The crosshair picker reads the centre rather than a tap, which is the one
+  // way to place a point precisely with a thumb over it.
+  useEffect(() => {
+    const instance = map.current;
+    if (!instance || !onCentreChange) return;
+
+    let frame = 0;
+    const report = (): void => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const { lat, lng } = instance.getCenter();
+        onCentreChange({ lat, lon: lng });
+      });
+    };
+    report();
+    instance.on('move', report);
+    return () => {
+      cancelAnimationFrame(frame);
+      instance.off('move', report);
+    };
+  }, [onCentreChange]);
+
   // --- you ----------------------------------------------------------------
   useEffect(() => {
     const instance = map.current;
@@ -275,13 +346,18 @@ export function MapCanvas({
   // --- focus --------------------------------------------------------------
   useEffect(() => {
     if (!focus || !map.current) return;
-    const place = MAP_PLACES.find((p) => p.key === focus);
+    const place: LatLon | undefined =
+      MAP_PLACES.find((p) => p.key === focus) ??
+      saved.find((p) => p.key === focus);
     if (!place) return;
     map.current.easeTo({
       center: [place.lon, place.lat],
       zoom: Math.max(map.current.getZoom(), 14.5),
       duration: 550,
     });
+    // `saved` is read only to resolve the key; re-running when the list changes
+    // would fly the map back to the focused pin on every edit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focus]);
 
   return (
@@ -321,6 +397,43 @@ function buildPin(place: Place): HTMLElement {
       <path d="M15 37.2 4.6 21.8A12.6 12.6 0 1 1 25.4 21.8Z" fill="${colour}"/>
       <g stroke="${onColour}" stroke-width="1.7" fill="none"
          transform="translate(5.5 4.5) scale(0.95)">
+        ${GLYPH[place.category]}
+      </g>
+    </svg>`;
+  return el;
+}
+
+/**
+ * A place you added, told apart by *shape* rather than colour.
+ *
+ * Colour was the obvious answer and the wrong one: the five day colours already
+ * include a green, so a jade pin among them would read as day 3 at a glance.
+ * A square-headed marker against the curated round-headed teardrop survives at
+ * 30 px, survives colour blindness, and survives the accent changing.
+ */
+function buildSavedPin(place: SavedPlace): HTMLElement {
+  const el = document.createElement('button');
+  el.type = 'button';
+  el.setAttribute('aria-label', `${place.name}, added by you`);
+  el.style.cssText = [
+    'width:44px',
+    'height:44px',
+    'padding:0',
+    'border:0',
+    'background:transparent',
+    'cursor:pointer',
+    'transition:opacity 200ms',
+    'display:flex',
+    'align-items:flex-end',
+    'justify-content:center',
+  ].join(';');
+
+  el.innerHTML = `
+    <svg width="30" height="38" viewBox="0 0 30 38" aria-hidden="true">
+      <path d="M8 1.6h14a6.4 6.4 0 0 1 6.4 6.4v11.4a6.4 6.4 0 0 1-6.4 6.4h-3.4L15 37.2l-3.6-11.4H8a6.4 6.4 0 0 1-6.4-6.4V8A6.4 6.4 0 0 1 8 1.6Z"
+            fill="var(--accent)" stroke="var(--paper)" stroke-width="1.6"/>
+      <g stroke="var(--on-accent)" stroke-width="1.7" fill="none"
+         transform="translate(5 3.6) scale(0.95)">
         ${GLYPH[place.category]}
       </g>
     </svg>`;

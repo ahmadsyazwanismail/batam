@@ -46,6 +46,7 @@ function expected(t: ThemeTokens): Record<string, string> {
     rule: t.rule,
     accent: t.accent,
     'on-accent': t.onAccent,
+    warn: t.warn,
     'meal-sarapan': t.meal.sarapan,
     'meal-tengahari': t.meal.tengahari,
     'meal-petang': t.meal.petang,
@@ -147,6 +148,31 @@ describe.each(NAMES)('%s theme', (name) => {
 
   it('reads a label on an accent fill — every solid button', () => {
     expect(contrastRatio(t.onAccent, t.accent)).toBeGreaterThanOrEqual(AA_NORMAL);
+  });
+
+  it('reads the warning colour as text, which is the only way it is used', () => {
+    for (const [where, bg] of grounds) {
+      expect(contrastRatio(t.warn, bg), `warn on ${where}`).toBeGreaterThanOrEqual(AA_NORMAL);
+    }
+  });
+
+  it('keeps the warning colour a different hue from the accent', () => {
+    // Two semantics, so two colours. Deliberately not a contrast ratio: warn
+    // and accent are matched in *lightness* so neither shouts louder than the
+    // other, which puts them at 1.0:1 — and they are still obviously a salmon
+    // and a jade. Luminance is the wrong question here; hue is the right one.
+    const hue = (hex: string): number => {
+      const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(1 + i, 3 + i), 16) / 255);
+      const max = Math.max(r!, g!, b!);
+      const min = Math.min(r!, g!, b!);
+      if (max === min) return 0;
+      const d = max - min;
+      const h =
+        max === r! ? ((g! - b!) / d) % 6 : max === g! ? (b! - r!) / d + 2 : (r! - g!) / d + 4;
+      return (h * 60 + 360) % 360;
+    };
+    const apart = Math.abs(hue(t.warn) - hue(t.accent));
+    expect(Math.min(apart, 360 - apart), 'warn and accent are the same hue').toBeGreaterThan(60);
   });
 
   it('reads all four meal names, on both grounds', () => {

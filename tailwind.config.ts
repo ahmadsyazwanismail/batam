@@ -29,6 +29,7 @@ const config: Config = {
         rule: 'rgb(var(--rule-rgb) / <alpha-value>)',
         accent: 'rgb(var(--accent-rgb) / <alpha-value>)',
         'on-accent': 'rgb(var(--on-accent-rgb) / <alpha-value>)',
+        warn: 'rgb(var(--warn-rgb) / <alpha-value>)',
         meal: {
           sarapan: 'rgb(var(--meal-sarapan-rgb) / <alpha-value>)',
           tengahari: 'rgb(var(--meal-tengahari-rgb) / <alpha-value>)',

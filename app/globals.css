@@ -24,6 +24,8 @@
     --accent: rgb(var(--accent-rgb));
     --on-accent-rgb: 255 255 255;
     --on-accent: rgb(var(--on-accent-rgb));
+    --warn-rgb: 170 46 36;
+    --warn: rgb(var(--warn-rgb));
     --meal-sarapan-rgb: 227 155 60;
     --meal-sarapan: rgb(var(--meal-sarapan-rgb));
     --meal-tengahari-rgb: 194 65 12;
@@ -64,6 +66,8 @@
       --accent: rgb(var(--accent-rgb));
       --on-accent-rgb: 13 21 18;
       --on-accent: rgb(var(--on-accent-rgb));
+      --warn-rgb: 242 160 143;
+      --warn: rgb(var(--warn-rgb));
       --meal-sarapan-rgb: 232 166 75;
       --meal-sarapan: rgb(var(--meal-sarapan-rgb));
       --meal-tengahari-rgb: 255 138 91;
@@ -102,6 +106,8 @@
     --accent: rgb(var(--accent-rgb));
     --on-accent-rgb: 13 21 18;
     --on-accent: rgb(var(--on-accent-rgb));
+    --warn-rgb: 242 160 143;
+    --warn: rgb(var(--warn-rgb));
     --meal-sarapan-rgb: 232 166 75;
     --meal-sarapan: rgb(var(--meal-sarapan-rgb));
     --meal-tengahari-rgb: 255 138 91;
@@ -137,6 +143,8 @@
     --accent: rgb(var(--accent-rgb));
     --on-accent-rgb: 255 255 255;
     --on-accent: rgb(var(--on-accent-rgb));
+    --warn-rgb: 170 46 36;
+    --warn: rgb(var(--warn-rgb));
     --meal-sarapan-rgb: 227 155 60;
     --meal-sarapan: rgb(var(--meal-sarapan-rgb));
     --meal-tengahari-rgb: 194 65 12;
