@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { DAYS } from '@/data/trip';
 import type { LocationApi } from '@/lib/useLocation';
 import { farFromTrip, parseLocation, SOURCE_LABEL } from '@/lib/parseLocation';
+import { ATTRIBUTION, searchByName, type GeocodeHit } from '@/lib/geocode';
 import {
   CATEGORY_CHOICES,
   draftProblem,
@@ -16,12 +17,18 @@ import type { DraftState } from './addPlaceDraft';
 /**
  * Adding somewhere new, on the trip, with one hand.
  *
- * The hard part is not the form, it is the coordinates: there is no backend and
- * no geocoder, so "find me the address of this restaurant" is not something the
- * app can honestly offer. What it offers instead are the three ways you can
- * actually get a point onto a phone with no server behind it — paste the Maps
- * link you already have, use where you are standing, or move the map under a
- * crosshair. All three work with no signal once the app is installed.
+ * The hard part is not the form, it is the coordinates. Four ways in, in the
+ * order they are worth trying:
+ *
+ *  1. Search the name. The only one that needs a connection, and the only one
+ *     that can come back empty — OpenStreetMap knows the malls and the mosques
+ *     and often not the warung that opened last year. See lib/geocode.ts.
+ *  2. Paste the Maps link you already have. Works offline, always exact.
+ *  3. Use where you are standing.
+ *  4. Move the map under a crosshair.
+ *
+ * The last three are the ones that always work, which is why the failure copy
+ * on the first points back at them rather than apologising.
  */
 
 const fmt = (n: number): string => n.toFixed(5);
@@ -52,6 +59,10 @@ export function AddPlaceSheet({
   const [paste, setPaste] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [finding, setFinding] = useState(false);
+  const [hits, setHits] = useState<readonly GeocodeHit[] | null>(null);
+  const [findError, setFindError] = useState<string | null>(null);
+  const inFlight = useRef<AbortController | null>(null);
 
   // A fresh sheet starts fresh: a half-typed link left over from last time
   // would be read as this place's location.
@@ -60,8 +71,15 @@ export function AddPlaceSheet({
       setPaste('');
       setSubmitted(false);
       setConfirmingDelete(false);
+      setHits(null);
+      setFindError(null);
+      inFlight.current?.abort();
     }
   }, [open]);
+
+  // A search left running after the sheet closes would set state on a sheet
+  // that is no longer there, and would spend a request nobody is waiting for.
+  useEffect(() => () => inFlight.current?.abort(), []);
 
   const parsed = useMemo(() => (paste.trim() ? parseLocation(paste) : null), [paste]);
 
@@ -97,6 +115,33 @@ export function AddPlaceSheet({
   };
 
   const locating = location.permission === 'locating';
+
+  const find = async (): Promise<void> => {
+    inFlight.current?.abort();
+    const controller = new AbortController();
+    inFlight.current = controller;
+
+    setFinding(true);
+    setFindError(null);
+    setHits(null);
+    const result = await searchByName(draft.name, { signal: controller.signal });
+    if (controller.signal.aborted) return;
+    setFinding(false);
+    if (result.ok) setHits(result.hits);
+    else setFindError(result.reason);
+  };
+
+  const pickHit = (hit: GeocodeHit): void => {
+    onDraftChange({
+      ...draft,
+      // The name you typed was a search term; the one on the map is the name.
+      name: hit.name,
+      point: { lat: hit.lat, lon: hit.lon },
+      how: `found by name in OpenStreetMap${hit.detail ? ` · ${hit.detail}` : ''}`,
+    });
+    setHits(null);
+    setFindError(null);
+  };
 
   return (
     <Sheet
@@ -149,7 +194,8 @@ export function AddPlaceSheet({
             </>
           ) : (
             <p className="text-caption text-muted">
-              Not set yet. Paste a link, use where you are, or drop a pin.
+              Not set yet. Search the name, paste a link, use where you are, or
+              drop a pin.
             </p>
           )}
         </div>
@@ -158,6 +204,65 @@ export function AddPlaceSheet({
           <p role="status" className="mt-1.5 text-caption text-muted">
             {far}
           </p>
+        )}
+
+        {/* Search first, because it is the one that starts from what you know:
+            the name. The name field above is the query — there is no second box
+            to type it into twice. */}
+        <button
+          type="button"
+          onClick={find}
+          disabled={finding || draft.name.trim().length < 3}
+          className="tap mt-2 w-full rounded border border-hairline border-rule py-3 text-center font-semibold disabled:opacity-50"
+        >
+          {finding
+            ? 'Looking…'
+            : draft.name.trim().length < 3
+              ? 'Search by name — type the name first'
+              : `Search for “${draft.name.trim()}”`}
+        </button>
+
+        {findError && (
+          <p role="status" className="mt-1.5 text-caption text-muted">
+            {findError}
+          </p>
+        )}
+
+        {hits !== null && hits.length === 0 && (
+          <p role="status" className="mt-1.5 text-caption text-muted">
+            OpenStreetMap has never heard of it. It knows the malls, the hotels
+            and the mosques; a place that opened recently is often not in there.
+            Paste a Maps link or drop a pin — both are exact anyway.
+          </p>
+        )}
+
+        {hits !== null && hits.length > 0 && (
+          <>
+            <ul className="mt-2 overflow-hidden rounded border border-hairline border-rule">
+              {hits.map((hit) => (
+                <li key={`${hit.lat},${hit.lon}`} className="border-b-hairline border-rule last:border-b-0">
+                  <button
+                    type="button"
+                    onClick={() => pickHit(hit)}
+                    className="tap flex w-full items-start gap-3 bg-card px-3 py-2.5 text-left"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-semibold tracking-[-0.015em]">{hit.name}</span>
+                      {hit.detail && (
+                        <span className="mt-0.5 block text-caption text-muted">{hit.detail}</span>
+                      )}
+                    </span>
+                    {/* Anything off the island is worth flagging: a search for
+                        a common restaurant name finds one in Java first. */}
+                    {!hit.nearby && (
+                      <span className="shrink-0 pt-0.5 text-caption text-muted">far</span>
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-1.5 text-caption text-muted">{ATTRIBUTION}</p>
+          </>
         )}
 
         <label className="sr-only" htmlFor="add-paste">

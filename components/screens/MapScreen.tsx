@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { FilterChips } from '@/components/FilterChips';
 import { PlaceSheet } from '@/components/PlaceSheet';
+import { AddPlaceSheet } from '@/components/AddPlaceSheet';
+import { SavedPlaceSheet } from '@/components/SavedPlaceSheet';
 import { draftFrom, EMPTY_DRAFT, type DraftState } from '@/components/addPlaceDraft';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LocationBar } from '@/components/LocationBar';
@@ -15,17 +17,6 @@ import { useHydrated, useTrip } from '@/lib/store';
 import { useLocation } from '@/lib/useLocation';
 import { useOnline } from '@/lib/useOnline';
 import { takeDraft } from '@/lib/draftHandoff';
-
-// Neither sheet is needed until it is asked for, and this screen is already
-// carrying MapLibre.
-const AddPlaceSheet = dynamic(
-  () => import('@/components/AddPlaceSheet').then((m) => m.AddPlaceSheet),
-  { ssr: false },
-);
-const SavedPlaceSheet = dynamic(
-  () => import('@/components/SavedPlaceSheet').then((m) => m.SavedPlaceSheet),
-  { ssr: false },
-);
 
 // MapLibre touches `window` on import, so it never renders on the server.
 const MapCanvas = dynamic(

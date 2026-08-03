@@ -1,13 +1,14 @@
 'use client';
 
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
-import dynamic from 'next/dynamic';
 import { Screen } from '@/components/Screen';
 import { LocationBar } from '@/components/LocationBar';
 import { FilterChips } from '@/components/FilterChips';
 import { Distance } from '@/components/Distance';
 import { PlaceField } from '@/components/PlaceField';
 import { PlaceSheet } from '@/components/PlaceSheet';
+import { AddPlaceSheet } from '@/components/AddPlaceSheet';
+import { SavedPlaceSheet } from '@/components/SavedPlaceSheet';
 import { draftFrom, EMPTY_DRAFT, type DraftState } from '@/components/addPlaceDraft';
 import { EmptyState } from '@/components/EmptyState';
 import {
@@ -26,18 +27,6 @@ import { useHydrated, useTrip } from '@/lib/store';
 import { usePrefersReducedMotion } from '@/lib/motion';
 import { asPlace, isSavedKey, savedSearchTerms, type SavedPlace } from '@/lib/savedPlaces';
 import { stashDraft } from '@/lib/draftHandoff';
-
-// Neither sheet exists until you ask for one, and between them they pull in
-// the whole form and a second detail panel. Loading them with the list cost
-// this screen three Lighthouse points for markup nobody had asked to see.
-const AddPlaceSheet = dynamic(
-  () => import('@/components/AddPlaceSheet').then((m) => m.AddPlaceSheet),
-  { ssr: false },
-);
-const SavedPlaceSheet = dynamic(
-  () => import('@/components/SavedPlaceSheet').then((m) => m.SavedPlaceSheet),
-  { ssr: false },
-);
 
 /**
  * Every place, searchable.

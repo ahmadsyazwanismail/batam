@@ -61,14 +61,37 @@ through the same store as the tick list. They are kept visibly separate everywhe
 their own pin shape, a "Yours" tag in the list, their own block at the foot of a day —
 so the app never blurs "we booked this" into "we might go here".
 
-There is no backend and no geocoder, so the app cannot look a place up by name. The
-three ways to get a coordinate onto a phone with nothing behind it all work offline:
+Both sheets are imported statically, not lazily. Lazy-loading them saved 5 kB on Places
+and broke adding a place with no signal — the chunk cannot be fetched when you are
+offline, which is the one situation this app exists for. 5 kB is not worth that.
 
-| How | When you would use it |
-| --- | --- |
-| Paste a link | You found it in Google Maps. `lib/parseLocation.ts` reads Google, Apple, Waze, OSM, `geo:` and bare coordinates. |
-| Use my location | You are standing in it. |
-| Drop a pin | You can see it but it is not on any map. The map moves under a fixed crosshair, because your thumb covers the spot you are aiming at. |
+Four ways to get a coordinate, in the order they are worth trying:
+
+| How | When you would use it | Needs signal |
+| --- | --- | --- |
+| Search the name | You know what it is called. `lib/geocode.ts`, against OpenStreetMap's Nominatim — free, no key, no account. | yes |
+| Paste a link | You found it in Google Maps. `lib/parseLocation.ts` reads Google, Apple, Waze, OSM, `geo:` and bare coordinates. | no |
+| Use my location | You are standing in it. | no |
+| Drop a pin | You can see it but it is not on any map. The map moves under a fixed crosshair, because your thumb covers the spot you are aiming at. | no |
+
+Search is the only part of this app that needs a connection, and the only one that can
+come back empty. OSM knows the malls, the hotels, the ferry terminal and the mosques; it
+very often does not know the warung that opened last year, which is exactly the sort of
+place you would be adding. So it is one route among four rather than the way in, and
+every failure message — offline, rate-limited, unreachable, nothing found — names one of
+the other three instead of apologising. Nominatim's policy caps use at one request a
+second and forbids bulk, which is why there is no search-as-you-type: you press a button,
+and `MIN_GAP_MS` refuses a second request sent too soon.
+
+Results are ranked by distance from the trip, not by Nominatim's own score. That score is
+global, so searching "Sederhana" ranks a large place in Java above a small one on Batam;
+anything within 60 km is promoted, and anything outside is tagged **far** rather than
+hidden — Johor Bahru and Singapore are both legitimately on the way.
+
+**Unverified:** the live Nominatim call has never run. The network policy where this was
+built blocks it, so `lib/geocode.test.ts` works against recorded response shapes and a
+fake `fetch`, and the browser tests stub the route. The request shape and every failure
+path are covered; that OpenStreetMap still answers in this shape is not.
 
 Two details in the parser earn their tests. A Google link carries the place **and** the
 camera — `!3d…!4d…` is the pin, `@lat,lon` is where the map was looking, and they differ

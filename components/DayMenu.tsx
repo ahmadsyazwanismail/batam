@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { dayMenu, type Course } from '@/lib/meals';
 import { directionsUrl, formatKm, haversineKm, type LatLon } from '@/lib/geo';
@@ -11,15 +10,10 @@ import { useHydrated, useTrip } from '@/lib/store';
 import { listVariants, stationVariants, usePrefersReducedMotion } from '@/lib/motion';
 import { PlaceField } from './PlaceField';
 import { PlaceSheet } from './PlaceSheet';
+import { SavedPlaceSheet } from './SavedPlaceSheet';
 
 import { asPlace, isSavedKey, savedOnDay } from '@/lib/savedPlaces';
 import type { DayId } from '@/data/trip';
-
-// Only reached by tapping one of your own places, which most days have none of.
-const SavedPlaceSheet = dynamic(
-  () => import('./SavedPlaceSheet').then((m) => m.SavedPlaceSheet),
-  { ssr: false },
-);
 
 /**
  * A day, as four courses.
