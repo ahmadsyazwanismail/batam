@@ -69,36 +69,57 @@ Four ways to get a coordinate, in the order they are worth trying:
 
 | How | When you would use it | Needs signal |
 | --- | --- | --- |
-| Search the name | You know what it is called. `lib/geocode.ts`, against OpenStreetMap's Nominatim — free, no key, no account. | yes |
+| Just type the name | You know what it is called. Matches on Batam appear under the field as you type. `lib/geocode.ts` + `lib/usePlaceSearch.ts`. | yes |
 | Paste a link | You found it in Google Maps. `lib/parseLocation.ts` reads Google, Apple, Waze, OSM, `geo:` and bare coordinates. | no |
 | Use my location | You are standing in it. | no |
 | Drop a pin | You can see it but it is not on any map. The map moves under a fixed crosshair, because your thumb covers the spot you are aiming at. | no |
 
-Search is the only part of this app that needs a connection, and the only one that can
-come back empty. OSM knows the malls, the hotels, the ferry terminal and the mosques; it
-very often does not know the warung that opened last year, which is exactly the sort of
-place you would be adding. So it is one route among four rather than the way in, and
-every failure message — offline, rate-limited, unreachable, nothing found — names one of
-the other three instead of apologising. Nominatim's policy caps use at one request a
-second and forbids bulk, which is why there is no search-as-you-type: you press a button,
-and `MIN_GAP_MS` refuses a second request sent too soon.
+### The name field is a combobox
 
-Results are ranked by distance from the trip, not by Nominatim's own score. That score is
-global, so searching "Sederhana" ranks a large place in Java above a small one on Batam;
-anything within 60 km is promoted, and anything outside is tagged **far** rather than
-hidden — Johor Bahru and Singapore are both legitimately on the way.
+Typing searches; there is no button and no second box. The field carries
+`role="combobox"` with `aria-activedescendant`, arrow keys move through the list,
+Enter takes the highlighted row and Escape closes the list.
 
-**Unverified:** the live Nominatim call has never run. The network policy where this was
+That Escape needs a capture-phase listener on `document`, not `stopPropagation` in the
+field's `onKeyDown`. `Sheet` closes itself from a native `keydown` listener on `document`
+registered when it opened, and React's synthetic handler cannot reliably beat a listener
+already sitting on the same node. Measured before the fix: Escape on an open list closed
+the whole form.
+
+### Why Photon and not Nominatim
+
+The first version used OpenStreetMap's own Nominatim behind a Search button, because
+Nominatim's usage policy names auto-complete as a forbidden use — "you must not implement
+such a service on top of the API". A debounce would not have made that acceptable; it is
+a prohibition, not a rate limit. [Photon](https://photon.komoot.io) is Komoot's geocoder
+over the same OpenStreetMap data and is *built* for typeahead. Same coverage, no key, no
+account. Requests are debounced 350 ms, need three characters, and each keystroke aborts
+the one before it, so a slow answer for "Nag" can never land on top of a fast one for
+"Nagoya".
+
+### Batam only
+
+Every query is bounded to `SEARCH_BOUNDS`, and the results are filtered against the same
+box again on the way back. Doing it twice is the point: the box in the request is a
+request, and the app promises that nothing outside Batam can be chosen. That promise
+should hold even if the service ignores the parameter or is swapped for another one.
+
+The box covers the main island, Rempang and the Galang chain the Barelang bridges run
+down, plus Belakang Padang. It stops short of Singapore — Sentosa is at 1.249, Batam's
+northern tip at 1.183 — and of Bintan to the east. `geocode.test.ts` holds it to
+containing all 38 places already in the trip data: if the app's own list fell outside the
+box it searches, the box would be wrong.
+
+Coverage is the honest limit. OSM knows the malls, the hotels, the ferry terminal and the
+mosques; it very often does not know the warung that opened last year, which is exactly
+the sort of place you would be adding. So search is one route among four rather than the
+way in, and every failure — offline, rate-limited, unreachable, nothing found — names one
+of the other three instead of apologising.
+
+**Unverified:** the live Photon call has never run. The network policy where this was
 built blocks it, so `lib/geocode.test.ts` works against recorded response shapes and a
-fake `fetch`, and the browser tests stub the route. The request shape and every failure
-path are covered; that OpenStreetMap still answers in this shape is not.
-
-Two details in the parser earn their tests. A Google link carries the place **and** the
-camera — `!3d…!4d…` is the pin, `@lat,lon` is where the map was looking, and they differ
-by streets if you panned before copying, so the pin wins. And a shortened
-`maps.app.goo.gl` link carries no coordinates at all; following it needs a connection
-and Google blocks the request from a browser, so the app says so and points at "Drop a
-pin" rather than failing blankly.
+fake `fetch`, and the browser tests stub the route. The request shape, the Batam filter
+and every failure path are covered; that Photon still answers in this shape is not.
 
 A place you add can be given a day, or left without one. Left without one it stays out
 of every day filter and out of every day's plan — that is a real answer, not a missing

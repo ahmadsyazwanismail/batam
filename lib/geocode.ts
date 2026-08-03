@@ -1,138 +1,179 @@
 import type { LatLon } from './geo';
 
 /**
- * Looking a place up by name.
+ * Looking a place up by name, as you type, on Batam only.
  *
- * The app is offline-first and has no backend, so this is the one thing it
- * genuinely cannot do on its own — a name is not a coordinate, and turning one
- * into the other needs somebody's index of the world. Nominatim is
- * OpenStreetMap's own geocoder: free, no key, no account, and usable from a
- * browser. The trade is coverage. OSM knows the malls, the hotels, the ferry
- * terminal and the mosques; it very often does not know the warung that opened
- * last year, which is exactly the sort of place you would be adding. So this is
- * offered as one route among four, never as the way in, and the empty result
- * says plainly that the other three still work.
+ * **Why Photon and not Nominatim.** The first version of this used
+ * OpenStreetMap's own Nominatim behind a Search button, because Nominatim's
+ * usage policy names auto-complete as a forbidden use: "you must not implement
+ * such a service on top of the API". A debounce would not have made that
+ * acceptable — it is a prohibition, not a rate limit. Photon is Komoot's
+ * geocoder over the same OpenStreetMap data and is *built* for typeahead, so
+ * search-as-you-type is what it is for rather than something smuggled past it.
+ * Same data, same coverage, no key, no account.
  *
- * Nominatim's usage policy caps this at one request a second and forbids bulk
- * use. That is why there is no search-as-you-type here: you press a button, and
- * {@link MIN_GAP_MS} refuses to send a second request too soon after the first.
+ * **Batam only.** Every query is bounded to {@link SEARCH_BOUNDS}, and the
+ * results are filtered against the same box again on the way back. Doing it
+ * twice is the point: the box in the request is a request, and the app promises
+ * the user that nothing outside Batam can be picked. That promise should hold
+ * even if the service ignores the parameter, changes its meaning, or is swapped
+ * for another one.
  */
-
-const ENDPOINT = 'https://nominatim.openstreetmap.org/search';
 
 /**
- * The island, as a bounding box. Nominatim treats this as a preference rather
- * than a filter, so "Ranah Minang" finds the Batam one first without making a
- * place in Johor unfindable — the ferry does leave from there.
+ * Batam, as the search understands it: the main island, Rempang and the Galang
+ * chain the Barelang bridges run down, plus Belakang Padang to the west.
+ *
+ * Wider than the map's own bounds, because the map frames the trip and this has
+ * to be able to find somewhere the trip does not already go. Tight enough at the
+ * top to exclude Singapore — Sentosa is at 1.249 and Nongsa, the northern tip of
+ * Batam, is at 1.183 — and tight enough at the east to exclude Bintan.
+ *
+ * `geocode.test.ts` holds it to containing all 38 places in the trip data: if
+ * the app's own list falls outside the box it searches, the box is wrong.
  */
-const VIEWBOX = '103.94,0.95,104.09,1.19';
+export const SEARCH_BOUNDS = {
+  minLon: 103.82,
+  minLat: 0.7,
+  maxLon: 104.2,
+  maxLat: 1.21,
+} as const;
 
-/** Roughly the middle of the island, for "is this result even near us". */
-const BATAM: LatLon = { lat: 1.1301, lon: 104.0529 };
+/** Roughly the middle of the island. Photon scores nearer results higher. */
+const CENTRE: LatLon = { lat: 1.0966, lon: 104.01 };
 
-/** A result this far from Batam is not what you meant, but may still be right. */
-const NEAR_KM = 60;
+const ENDPOINT = 'https://photon.komoot.io/api/';
 
-/** Nominatim asks for no more than one request a second. This honours it. */
-export const MIN_GAP_MS = 1100;
+/**
+ * How long to wait after the last keystroke.
+ *
+ * Long enough that typing "Nagoya Hill" is two or three requests rather than
+ * eleven, short enough that the list feels like it is keeping up.
+ */
+export const DEBOUNCE_MS = 350;
+
+/** Below this a query matches half the island and the list is noise. */
+export const MIN_QUERY = 3;
 
 export interface GeocodeHit {
   /** The name itself: "Nagoya Hill Shopping Mall". */
   readonly name: string;
-  /** Where it is: "Lubuk Baja, Batam, Kepulauan Riau". Possibly empty. */
+  /** Where it is: "Jalan Teuku Umar, Lubuk Baja, Batam". Possibly empty. */
   readonly detail: string;
   readonly lat: number;
   readonly lon: number;
-  /** True when it is on or near the island — the list puts these first. */
-  readonly nearby: boolean;
 }
 
 export type GeocodeResult =
   | { readonly ok: true; readonly hits: readonly GeocodeHit[] }
-  | { readonly ok: false; readonly reason: string };
+  | { readonly ok: false; readonly reason: string }
+  /** A newer keystroke replaced this one. The caller shows nothing. */
+  | { readonly ok: false; readonly aborted: true; readonly reason: string };
 
-/** One row of Nominatim's `jsonv2`, as much of it as is used. */
-interface RawHit {
-  readonly lat?: string;
-  readonly lon?: string;
-  readonly name?: string;
-  readonly display_name?: string;
+export function inBatam(point: LatLon): boolean {
+  return (
+    point.lat >= SEARCH_BOUNDS.minLat &&
+    point.lat <= SEARCH_BOUNDS.maxLat &&
+    point.lon >= SEARCH_BOUNDS.minLon &&
+    point.lon <= SEARCH_BOUNDS.maxLon
+  );
 }
 
-export function buildUrl(query: string, limit = 6): string {
+export function buildUrl(query: string, limit = 8): string {
   const params = new URLSearchParams({
     q: query.trim(),
-    format: 'jsonv2',
     limit: String(limit),
-    'accept-language': 'en',
-    viewbox: VIEWBOX,
-    // Bias, not filter. `bounded=1` would make anywhere off the island
-    // unfindable, and the trip starts in Malaysia.
-    bounded: '0',
+    lang: 'en',
+    // Restrict, not merely prefer. The user asked to be sure they cannot pick
+    // somewhere off the island by accident.
+    bbox: `${SEARCH_BOUNDS.minLon},${SEARCH_BOUNDS.minLat},${SEARCH_BOUNDS.maxLon},${SEARCH_BOUNDS.maxLat}`,
+    // Within the box, nearer to the middle of Batam scores higher.
+    lat: String(CENTRE.lat),
+    lon: String(CENTRE.lon),
   });
   return `${ENDPOINT}?${params.toString()}`;
 }
 
-function kmApart(a: LatLon, b: LatLon): number {
-  const toRad = (d: number): number => (d * Math.PI) / 180;
-  const dLat = toRad(b.lat - a.lat);
-  const dLon = toRad(b.lon - a.lon);
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLon / 2) ** 2;
-  return 6371 * 2 * Math.asin(Math.sqrt(h));
+/** One Photon GeoJSON feature, as much of it as is used. */
+interface Feature {
+  readonly geometry?: { readonly coordinates?: unknown };
+  readonly properties?: Record<string, unknown>;
+}
+
+const text = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
+
+/**
+ * Builds the line under the name.
+ *
+ * Street, then district, then city, deduplicated — Photon repeats the city as
+ * the district on a lot of Batam entries, and "Batam, Batam" reads as a bug.
+ */
+function detailOf(props: Record<string, unknown>): string {
+  const parts = [
+    [text(props.housenumber), text(props.street)].filter(Boolean).join(' '),
+    text(props.district),
+    text(props.city),
+  ].filter(Boolean);
+  return [...new Set(parts)].slice(0, 3).join(', ');
 }
 
 /**
- * Splits Nominatim's one long comma-separated string into a name and a place.
+ * A name for a feature that has none.
  *
- * `display_name` is the full chain — "Nagoya Hill Shopping Mall, Jalan Teuku
- * Umar, Lubuk Baja, Batam, Kepulauan Riau, 29444, Indonesia" — which is too
- * long for a row and repeats the country on every result. Three segments after
- * the name is enough to tell two same-named places apart.
+ * Photon returns address-only results — a house number on a street, no name.
+ * Those are still a real point you might want, so they get called by their
+ * street rather than dropped or shown blank.
  */
-function split(raw: RawHit): { name: string; detail: string } {
-  const chain = (raw.display_name ?? '').split(',').map((s) => s.trim()).filter(Boolean);
-  const name = raw.name?.trim() || chain[0] || 'Unnamed place';
-  const rest = chain[0] === name ? chain.slice(1) : chain;
-  return { name, detail: rest.slice(0, 3).join(', ') };
+function nameOf(props: Record<string, unknown>): string {
+  const name = text(props.name);
+  if (name) return name;
+  const street = [text(props.housenumber), text(props.street)].filter(Boolean).join(' ');
+  return street || text(props.city) || 'Unnamed place';
 }
 
-/**
- * Turns the raw response into rows, nearest-to-the-trip first.
- *
- * Nominatim orders by its own importance score, which is global: searching
- * "Sederhana" ranks a big place in Java above a small one on Batam. Anything
- * within {@link NEAR_KM} is promoted, and the service's ordering is kept inside
- * each group rather than being replaced by distance — importance is still the
- * better signal once you are on the right island.
- */
 export function parseHits(payload: unknown): readonly GeocodeHit[] {
-  if (!Array.isArray(payload)) return [];
+  const features = (payload as { features?: unknown })?.features;
+  if (!Array.isArray(features)) return [];
 
   const hits: GeocodeHit[] = [];
-  for (const raw of payload as RawHit[]) {
-    const lat = Number(raw?.lat);
-    const lon = Number(raw?.lon);
+  for (const feature of features as Feature[]) {
+    const coords = feature?.geometry?.coordinates;
+    if (!Array.isArray(coords) || coords.length < 2) continue;
+    // GeoJSON is [lon, lat]. Getting this the wrong way round would put every
+    // result in the Indian Ocean, so it is asserted in the tests.
+    const lon = Number(coords[0]);
+    const lat = Number(coords[1]);
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
-    if (Math.abs(lat) > 90 || Math.abs(lon) > 180) continue;
 
-    const { name, detail } = split(raw);
-    // Two entries for the same building — a node and its way — land within a
-    // few metres of each other and read as a duplicate.
-    if (hits.some((h) => h.name === name && kmApart(h, { lat, lon }) < 0.05)) continue;
+    // The second gate. See the note at the top: the promise is the app's, not
+    // the service's.
+    if (!inBatam({ lat, lon })) continue;
 
-    hits.push({ name, detail, lat, lon, nearby: kmApart(BATAM, { lat, lon }) <= NEAR_KM });
+    const props = feature.properties ?? {};
+    const name = nameOf(props);
+    const detail = detailOf(props);
+
+    // Photon returns a node and its building as two features metres apart.
+    if (
+      hits.some(
+        (h) =>
+          h.name === name &&
+          Math.abs(h.lat - lat) < 0.0005 &&
+          Math.abs(h.lon - lon) < 0.0005,
+      )
+    ) {
+      continue;
+    }
+
+    hits.push({ name, detail, lat, lon });
   }
-
-  return [...hits.filter((h) => h.nearby), ...hits.filter((h) => !h.nearby)];
+  return hits;
 }
 
-/** Maps a failure onto something worth reading, with a way forward in it. */
 export function reasonFor(kind: 'offline' | 'busy' | 'unreachable' | 'broken'): string {
   switch (kind) {
     case 'offline':
-      return 'Looking a name up needs a connection — it is the one part of this app that does. Paste a link or drop a pin instead; both work with no signal.';
+      return 'Searching needs a connection — it is the one part of this app that does. Paste a link or drop a pin instead; both work with no signal.';
     case 'busy':
       return 'The free lookup service is rate-limiting us. Give it a few seconds, or paste a link instead.';
     case 'unreachable':
@@ -142,36 +183,22 @@ export function reasonFor(kind: 'offline' | 'busy' | 'unreachable' | 'broken'): 
   }
 }
 
-let lastCallAt = 0;
-
-/** Exposed so tests can run without waiting out the real gap. */
-export function resetRateLimit(): void {
-  lastCallAt = 0;
-}
+const ABORTED: GeocodeResult = { ok: false, aborted: true, reason: '' };
 
 /**
- * Runs the search. Rejects nothing — every failure comes back as `ok: false`
- * with something to read, because a thrown error inside a form is a blank box.
+ * Runs one search. Never throws: a rejected promise inside a keystroke handler
+ * is a form that silently stops responding.
  */
 export async function searchByName(
   query: string,
-  options: { signal?: AbortSignal; now?: () => number; fetcher?: typeof fetch } = {},
+  options: { signal?: AbortSignal; fetcher?: typeof fetch } = {},
 ): Promise<GeocodeResult> {
   const q = query.trim();
-  if (q.length < 3) {
-    return { ok: false, reason: 'Type a bit more of the name first.' };
-  }
+  if (q.length < MIN_QUERY) return { ok: true, hits: [] };
 
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
     return { ok: false, reason: reasonFor('offline') };
   }
-
-  const now = options.now ?? Date.now;
-  const since = now() - lastCallAt;
-  if (lastCallAt !== 0 && since < MIN_GAP_MS) {
-    return { ok: false, reason: reasonFor('busy') };
-  }
-  lastCallAt = now();
 
   const doFetch = options.fetcher ?? fetch;
   let response: Response;
@@ -180,23 +207,25 @@ export async function searchByName(
       signal: options.signal ?? null,
       headers: { Accept: 'application/json' },
     });
-  } catch {
+  } catch (error) {
+    // An abort is the normal case, not a failure: it means you kept typing.
+    if (options.signal?.aborted || (error as Error)?.name === 'AbortError') return ABORTED;
     return { ok: false, reason: reasonFor('unreachable') };
   }
 
+  if (options.signal?.aborted) return ABORTED;
   if (response.status === 429 || response.status === 503) {
     return { ok: false, reason: reasonFor('busy') };
   }
-  if (!response.ok) {
-    return { ok: false, reason: reasonFor('unreachable') };
-  }
+  if (!response.ok) return { ok: false, reason: reasonFor('unreachable') };
 
   try {
     return { ok: true, hits: parseHits(await response.json()) };
   } catch {
+    if (options.signal?.aborted) return ABORTED;
     return { ok: false, reason: reasonFor('broken') };
   }
 }
 
-/** OpenStreetMap's licence requires the credit. It goes under the results. */
-export const ATTRIBUTION = 'Results from OpenStreetMap';
+/** Photon's data is OpenStreetMap's, and its licence requires the credit. */
+export const ATTRIBUTION = 'Batam only · OpenStreetMap';

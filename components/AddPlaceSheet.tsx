@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DAYS } from '@/data/trip';
 import type { LocationApi } from '@/lib/useLocation';
 import { farFromTrip, parseLocation, SOURCE_LABEL } from '@/lib/parseLocation';
-import { ATTRIBUTION, searchByName, type GeocodeHit } from '@/lib/geocode';
+import { ATTRIBUTION, type GeocodeHit } from '@/lib/geocode';
+import { usePlaceSearch } from '@/lib/usePlaceSearch';
 import {
   CATEGORY_CHOICES,
   draftProblem,
@@ -20,15 +21,22 @@ import type { DraftState } from './addPlaceDraft';
  * The hard part is not the form, it is the coordinates. Four ways in, in the
  * order they are worth trying:
  *
- *  1. Search the name. The only one that needs a connection, and the only one
- *     that can come back empty — OpenStreetMap knows the malls and the mosques
- *     and often not the warung that opened last year. See lib/geocode.ts.
+ *  1. Just type the name. The field is a combobox: matches on Batam appear
+ *     underneath as you type, and picking one fills in the coordinates. The
+ *     only route that needs a connection, and the only one that can come back
+ *     empty — OpenStreetMap knows the malls and the mosques and often not the
+ *     warung that opened last year. See lib/geocode.ts and lib/usePlaceSearch.
  *  2. Paste the Maps link you already have. Works offline, always exact.
  *  3. Use where you are standing.
  *  4. Move the map under a crosshair.
  *
  * The last three are the ones that always work, which is why the failure copy
  * on the first points back at them rather than apologising.
+ *
+ * The results list is bounded to Batam, and says so on every render rather than
+ * only when something goes wrong: "Batam only · OpenStreetMap" sits under the
+ * field whether or not there are results, so the restriction is a property you
+ * can see rather than one you have to infer from what did not come back.
  */
 
 const fmt = (n: number): string => n.toFixed(5);
@@ -59,10 +67,9 @@ export function AddPlaceSheet({
   const [paste, setPaste] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const [finding, setFinding] = useState(false);
-  const [hits, setHits] = useState<readonly GeocodeHit[] | null>(null);
-  const [findError, setFindError] = useState<string | null>(null);
-  const inFlight = useRef<AbortController | null>(null);
+  /** Which result the arrow keys are on. -1 is "none". */
+  const [active, setActive] = useState(-1);
+  const search = usePlaceSearch(draft.name, open);
 
   // A fresh sheet starts fresh: a half-typed link left over from last time
   // would be read as this place's location.
@@ -71,15 +78,9 @@ export function AddPlaceSheet({
       setPaste('');
       setSubmitted(false);
       setConfirmingDelete(false);
-      setHits(null);
-      setFindError(null);
-      inFlight.current?.abort();
+      setActive(-1);
     }
   }, [open]);
-
-  // A search left running after the sheet closes would set state on a sheet
-  // that is no longer there, and would spend a request nobody is waiting for.
-  useEffect(() => () => inFlight.current?.abort(), []);
 
   const parsed = useMemo(() => (paste.trim() ? parseLocation(paste) : null), [paste]);
 
@@ -116,31 +117,59 @@ export function AddPlaceSheet({
 
   const locating = location.permission === 'locating';
 
-  const find = async (): Promise<void> => {
-    inFlight.current?.abort();
-    const controller = new AbortController();
-    inFlight.current = controller;
+  const listOpen = search.hits.length > 0;
 
-    setFinding(true);
-    setFindError(null);
-    setHits(null);
-    const result = await searchByName(draft.name, { signal: controller.signal });
-    if (controller.signal.aborted) return;
-    setFinding(false);
-    if (result.ok) setHits(result.hits);
-    else setFindError(result.reason);
-  };
+  // Escape closes the list, not the sheet — but only while the list is open.
+  //
+  // This has to be a capture-phase listener on `document` rather than
+  // `stopPropagation` inside the field's own onKeyDown. Sheet closes itself
+  // from a native `keydown` listener on `document`, registered when it opened;
+  // React's synthetic handler cannot reliably run first against a listener that
+  // is already on the same node. Capture runs before every bubble listener
+  // there is, whoever registered it and whenever. Measured: without this,
+  // pressing Escape on an open list closed the entire form.
+  useEffect(() => {
+    if (!listOpen) return;
+    const onKeyDown = (e: KeyboardEvent): void => {
+      if (e.key !== 'Escape') return;
+      e.stopPropagation();
+      search.dismiss();
+      setActive(-1);
+    };
+    document.addEventListener('keydown', onKeyDown, true);
+    return () => document.removeEventListener('keydown', onKeyDown, true);
+    // `search` is rebuilt every render; only whether the list is up matters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listOpen]);
 
   const pickHit = (hit: GeocodeHit): void => {
+    // The name you typed was a search term; the one on the map is the name.
+    search.accept(hit.name);
+    setActive(-1);
     onDraftChange({
       ...draft,
-      // The name you typed was a search term; the one on the map is the name.
       name: hit.name,
       point: { lat: hit.lat, lon: hit.lon },
-      how: `found by name in OpenStreetMap${hit.detail ? ` · ${hit.detail}` : ''}`,
+      how: `found on Batam in OpenStreetMap${hit.detail ? ` · ${hit.detail}` : ''}`,
     });
-    setHits(null);
-    setFindError(null);
+  };
+
+  const onNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
+    if (!listOpen) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActive((i) => (i + 1) % search.hits.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActive((i) => (i <= 0 ? search.hits.length - 1 : i - 1));
+    } else if (e.key === 'Enter') {
+      // Only when a row is actually highlighted: Enter on a typed name with
+      // nothing chosen should not silently pick the first thing on the list.
+      if (active >= 0 && search.hits[active]) {
+        e.preventDefault();
+        pickHit(search.hits[active]!);
+      }
+    }
   };
 
   return (
@@ -167,11 +196,79 @@ export function AddPlaceSheet({
           id="add-name"
           type="text"
           value={draft.name}
-          onChange={(e) => set('name', e.target.value)}
+          onChange={(e) => {
+            set('name', e.target.value);
+            setActive(-1);
+          }}
+          onKeyDown={onNameKeyDown}
           placeholder="Kopi Kenangan, the shop with the kites…"
           autoComplete="off"
+          role="combobox"
+          aria-expanded={listOpen}
+          aria-controls="add-name-list"
+          aria-autocomplete="list"
+          aria-describedby="add-name-hint"
+          aria-activedescendant={
+            listOpen && active >= 0 ? `add-name-option-${active}` : undefined
+          }
           className="tap mt-1.5 w-full rounded border border-hairline border-rule bg-card px-3 py-2.5 text-[1rem] placeholder:text-muted"
         />
+        <p id="add-name-hint" className="sr-only">
+          Places on Batam appear below as you type. Nothing outside Batam is
+          offered. Use the arrow keys to choose one, or fill the location in
+          yourself lower down.
+        </p>
+
+        {/* In the flow rather than floating over it. The sheet scrolls, and an
+            absolutely positioned dropdown inside a scrolling box gets clipped
+            by it — the list pushing the form down is the lesser evil. */}
+        {listOpen && (
+          <ul
+            id="add-name-list"
+            role="listbox"
+            aria-label="Places on Batam"
+            className="mt-1.5 overflow-hidden rounded border border-hairline border-rule"
+          >
+            {search.hits.map((hit, i) => (
+              <li
+                key={`${hit.lat},${hit.lon},${hit.name}`}
+                id={`add-name-option-${i}`}
+                role="option"
+                aria-selected={i === active}
+                onClick={() => pickHit(hit)}
+                // Pointer, not focus: taking focus would close the phone's
+                // keyboard mid-search, which is the bug this form already had.
+                onMouseEnter={() => setActive(i)}
+                className="tap cursor-pointer border-b-hairline border-rule px-3 py-2.5 last:border-b-0"
+                style={{
+                  backgroundColor: i === active ? 'var(--paper)' : 'var(--card)',
+                }}
+              >
+                <span className="block font-semibold tracking-[-0.015em]">{hit.name}</span>
+                {hit.detail && (
+                  <span className="mt-0.5 block text-caption text-muted">{hit.detail}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/* One line, always the same height once you are past the minimum, so
+            the form does not jump as results arrive. */}
+        {draft.name.trim().length >= 3 && (
+          <p role="status" className="mt-1.5 text-caption text-muted">
+            {search.error
+              ? search.error
+              : search.searching
+                ? 'Looking on Batam…'
+                : listOpen
+                  ? ATTRIBUTION
+                  : search.answered
+                    ? 'Nothing on Batam by that name. OpenStreetMap knows the malls and the mosques, often not a place that opened recently — paste a link or drop a pin below.'
+                    : ATTRIBUTION}
+          </p>
+        )}
+
         {submitted && problem && (
           <p role="alert" className="mt-1.5 text-caption text-warn">
             {problem}
@@ -204,65 +301,6 @@ export function AddPlaceSheet({
           <p role="status" className="mt-1.5 text-caption text-muted">
             {far}
           </p>
-        )}
-
-        {/* Search first, because it is the one that starts from what you know:
-            the name. The name field above is the query — there is no second box
-            to type it into twice. */}
-        <button
-          type="button"
-          onClick={find}
-          disabled={finding || draft.name.trim().length < 3}
-          className="tap mt-2 w-full rounded border border-hairline border-rule py-3 text-center font-semibold disabled:opacity-50"
-        >
-          {finding
-            ? 'Looking…'
-            : draft.name.trim().length < 3
-              ? 'Search by name — type the name first'
-              : `Search for “${draft.name.trim()}”`}
-        </button>
-
-        {findError && (
-          <p role="status" className="mt-1.5 text-caption text-muted">
-            {findError}
-          </p>
-        )}
-
-        {hits !== null && hits.length === 0 && (
-          <p role="status" className="mt-1.5 text-caption text-muted">
-            OpenStreetMap has never heard of it. It knows the malls, the hotels
-            and the mosques; a place that opened recently is often not in there.
-            Paste a Maps link or drop a pin — both are exact anyway.
-          </p>
-        )}
-
-        {hits !== null && hits.length > 0 && (
-          <>
-            <ul className="mt-2 overflow-hidden rounded border border-hairline border-rule">
-              {hits.map((hit) => (
-                <li key={`${hit.lat},${hit.lon}`} className="border-b-hairline border-rule last:border-b-0">
-                  <button
-                    type="button"
-                    onClick={() => pickHit(hit)}
-                    className="tap flex w-full items-start gap-3 bg-card px-3 py-2.5 text-left"
-                  >
-                    <span className="min-w-0 flex-1">
-                      <span className="block font-semibold tracking-[-0.015em]">{hit.name}</span>
-                      {hit.detail && (
-                        <span className="mt-0.5 block text-caption text-muted">{hit.detail}</span>
-                      )}
-                    </span>
-                    {/* Anything off the island is worth flagging: a search for
-                        a common restaurant name finds one in Java first. */}
-                    {!hit.nearby && (
-                      <span className="shrink-0 pt-0.5 text-caption text-muted">far</span>
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-1.5 text-caption text-muted">{ATTRIBUTION}</p>
-          </>
         )}
 
         <label className="sr-only" htmlFor="add-paste">
