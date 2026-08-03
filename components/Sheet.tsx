@@ -28,13 +28,27 @@ export function Sheet({
   const dragControls = useDragControls();
   const reduced = usePrefersReducedMotion();
 
+  // Read through a ref rather than depending on it.
+  //
+  // `onClose` is nearly always an inline arrow or a function declared in the
+  // parent's body, so a new identity arrives on *every* parent render — and the
+  // effect below moves focus. With `onClose` in its dependencies, typing one
+  // character into a field inside a sheet re-rendered the parent, re-ran this
+  // effect, and pulled focus out of the input and onto the dialog: on a phone
+  // that closes the keyboard after every letter. Nothing here needs the
+  // identity, only the latest value.
+  const closeRef = useRef(onClose);
+  useEffect(() => {
+    closeRef.current = onClose;
+  });
+
   // Escape closes, focus moves in, and the page behind stops scrolling.
   useEffect(() => {
     if (!open) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        closeRef.current();
         return;
       }
       // aria-modal="true" is a promise that the rest of the page is inert, so
@@ -69,7 +83,9 @@ export function Sheet({
       document.body.style.overflow = overflow;
       previouslyFocused?.focus?.();
     };
-  }, [open, onClose]);
+    // Only `open`. See closeRef above — adding `onClose` here is what made
+    // every keystroke inside a sheet dismiss the keyboard.
+  }, [open]);
 
   return (
     <AnimatePresence>

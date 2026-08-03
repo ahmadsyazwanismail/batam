@@ -65,6 +65,19 @@ export function MapCanvas({
   /** Re-apply the filter opacities once the markers exist. */
   const applyFilters = useRef<(() => void) | null>(null);
 
+  // Read the handler through a ref rather than depending on its identity. The
+  // effect below builds the whole map; if a caller ever passed an inline arrow
+  // for `onSelect`, every parent render would tear the map down and rebuild it.
+  // Today both callers wrap it in useCallback, which makes this belt and
+  // braces — but the failure would be silent and expensive, and the same
+  // mistake in Sheet.tsx shipped a form you could not type into.
+  const selectRef = useRef(onSelect);
+  const centreRef = useRef(onCentreChange);
+  useEffect(() => {
+    selectRef.current = onSelect;
+    centreRef.current = onCentreChange;
+  });
+
   // --- create once --------------------------------------------------------
   useEffect(() => {
     if (!container.current || map.current) return;
@@ -114,7 +127,7 @@ export function MapCanvas({
         const element = buildPin(place);
         element.addEventListener('click', (e) => {
           e.stopPropagation();
-          onSelect(place.key);
+          selectRef.current(place.key);
         });
         const marker = new maplibregl.Marker({ element, anchor: 'bottom' })
           .setLngLat([place.lon, place.lat])
@@ -144,7 +157,9 @@ export function MapCanvas({
       instance.remove();
       map.current = null;
     };
-  }, [onSelect]);
+    // Deliberately empty: the map is built once. See selectRef above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // --- filters: fade, never remove ---------------------------------------
   useEffect(() => {
@@ -279,7 +294,7 @@ export function MapCanvas({
       const element = buildSavedPin(place);
       element.addEventListener('click', (e) => {
         e.stopPropagation();
-        onSelect(place.key);
+        selectRef.current(place.key);
       });
       const marker = new maplibregl.Marker({ element, anchor: 'bottom' })
         .setLngLat([place.lon, place.lat])
@@ -287,21 +302,28 @@ export function MapCanvas({
       element.setAttribute('aria-label', `${place.name}, added by you`);
       live.set(place.key, marker);
     }
-  }, [saved, onSelect]);
+  }, [saved]);
 
   // --- where the middle of the glass is -----------------------------------
   // The crosshair picker reads the centre rather than a tap, which is the one
   // way to place a point precisely with a thumb over it.
+  //
+  // Through a ref, and for a sharper reason than the others: this one *sets*
+  // parent state. Depending on the prop's identity meant report → setCentre →
+  // parent re-render → new prop identity → effect re-runs → report, which is a
+  // loop rather than merely waste. `wanted` is a boolean, so it only changes
+  // when the handler genuinely appears or disappears.
+  const wanted = Boolean(onCentreChange);
   useEffect(() => {
     const instance = map.current;
-    if (!instance || !onCentreChange) return;
+    if (!instance || !wanted) return;
 
     let frame = 0;
     const report = (): void => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         const { lat, lng } = instance.getCenter();
-        onCentreChange({ lat, lon: lng });
+        centreRef.current?.({ lat, lon: lng });
       });
     };
     report();
@@ -310,7 +332,7 @@ export function MapCanvas({
       cancelAnimationFrame(frame);
       instance.off('move', report);
     };
-  }, [onCentreChange]);
+  }, [wanted]);
 
   // --- you ----------------------------------------------------------------
   useEffect(() => {
