@@ -29,7 +29,11 @@ export function DayScreen({ day }: { day: DayId }): JSX.Element {
   // prerendered — so nothing time-dependent renders before mount.
   if (!now) {
     return (
-      <Screen eyebrow={`Day ${day}`} title={info.name}>
+      <Screen
+        eyebrow={formatTripDate(info.date)}
+        title={`Day ${day}`}
+        subtitle={info.name}
+      >
         <p className="px-gutter text-muted">Working out where you are…</p>
       </Screen>
     );
@@ -47,9 +51,13 @@ export function DayScreen({ day }: { day: DayId }): JSX.Element {
 
   return (
     <>
+      {/* "Day 3" leads and "Batam Centre" follows, everywhere a day is named.
+          Which day you are on is what you navigate by; the area is what tells
+          you what that day is. It used to be the other way round. */}
       <Screen
-        eyebrow={`Day ${day} of ${DAYS.length} · ${formatTripDate(info.date)}`}
-        title={info.name}
+        eyebrow={`${formatTripDate(info.date)} · ${day} of ${DAYS.length}`}
+        title={`Day ${day}`}
+        subtitle={info.name}
       >
         <p className="px-gutter text-caption text-muted">Based at {base.name}</p>
 

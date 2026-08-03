@@ -77,10 +77,10 @@ export function DayComplete({ line }: { line: DayId }): JSX.Element | null {
               />
             </div>
             <p className="-mt-1 text-center text-[1.25rem] font-bold leading-tight tracking-[-0.02em]">
-              {dayById(line).name} complete
+              Day {line} complete
             </p>
             <p className="eyebrow mt-2 text-muted">
-              Day {line} · every stop ticked
+              {dayById(line).name} · every stop ticked
             </p>
           </motion.div>
         </motion.div>

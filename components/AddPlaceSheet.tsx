@@ -417,7 +417,9 @@ export function AddPlaceSheet({
                 type="button"
                 onClick={() => set('day', day.id)}
                 aria-pressed={on}
-                className="tap shrink-0 rounded-full border px-3 py-1.5 text-caption font-semibold transition-colors"
+                aria-label={`Day ${day.id}, ${day.name}`}
+                // Same shape as the filter chips: day first, area under it.
+                className="tap shrink-0 rounded-full border px-3 py-1.5 text-left transition-colors"
                 style={
                   on
                     ? {
@@ -428,7 +430,10 @@ export function AddPlaceSheet({
                     : { borderColor: 'var(--rule)', color: 'var(--muted)' }
                 }
               >
-                Day {day.id}
+                <span className="flex flex-col leading-tight">
+                  <span className="text-caption font-semibold">Day {day.id}</span>
+                  <span className="text-eyebrow font-medium tracking-normal">{day.name}</span>
+                </span>
               </button>
             );
           })}

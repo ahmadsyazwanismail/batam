@@ -54,6 +54,12 @@ export function TodayScreen(): JSX.Element {
     <Screen
       eyebrow="Batam · 21–25 Aug 2026"
       title={<TodayTitle phase={phase} now={now} />}
+      // The headline here is the meal, so the day itself had nowhere to show.
+      // On a trip where every screen else is organised by day, "which day am
+      // I on" should not need a second tap to answer.
+      subtitle={
+        phase.phase === 'during' ? `Day ${phase.day.id} · ${phase.day.name}` : undefined
+      }
       trailing={<Clock now={now} />}
     >
       {phase.phase === 'before' && <BeforeTheTrip phase={phase} now={now} />}
@@ -71,7 +77,7 @@ function TodayTitle({ phase, now }: { phase: TripPhase; now: Date }): JSX.Elemen
   const meal = currentMeal(wibMinutes(now));
   if (meal) return <>{meal.name}</>;
   const next = nextMeal(wibMinutes(now));
-  return next ? <>Before {next.name.toLowerCase()}</> : <>{phase.day.name}</>;
+  return next ? <>Before {next.name.toLowerCase()}</> : <>Day {phase.day.id}</>;
 }
 
 /**

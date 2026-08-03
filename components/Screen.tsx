@@ -11,11 +11,18 @@ import { ThemeToggle } from './ThemeToggle';
 export function Screen({
   eyebrow,
   title,
+  subtitle,
   trailing,
   children,
 }: {
   eyebrow: string;
   title: ReactNode;
+  /**
+   * The second headline, under the first. Where a day is concerned the first
+   * is "Day 3" and this is "Batam Centre": which day you are on is the thing
+   * you navigate by, and the area is what tells you what that day *is*.
+   */
+  subtitle?: ReactNode;
   trailing?: ReactNode;
   children: ReactNode;
 }): JSX.Element {
@@ -34,6 +41,11 @@ export function Screen({
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="signboard text-display">{title}</h1>
+            {subtitle ? (
+              <p className="mt-1.5 text-lede font-semibold tracking-[-0.02em] text-muted">
+                {subtitle}
+              </p>
+            ) : null}
           </div>
           {trailing ? <div className="shrink-0 pt-1">{trailing}</div> : null}
         </div>

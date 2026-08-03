@@ -77,6 +77,16 @@ export interface Day {
   readonly date: string;
   /** Weekday as printed on the ticket, e.g. "Fri". */
   readonly weekday: string;
+  /**
+   * The area the day is spent in: "Arrival", "Batam Centre", "Northern loop".
+   *
+   * A *second* label, never the first. Everywhere a day is named — the filter
+   * chips, the day screens, the place sheets, the day-complete card — "Day 3"
+   * leads and this follows. Which day you are on is the handle you navigate by;
+   * this is what tells you what that day is once you have found it. The app
+   * used to lead with this, and asking someone to remember that Northern loop
+   * is day four is asking them to learn a second index for no reason.
+   */
   readonly name: string;
   /**
    * The line colour, exactly as specified. Used for anything the colour *is* —

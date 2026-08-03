@@ -129,6 +129,25 @@ folded into the four meal courses: which course a place lands in is derived from
 trip data (`lib/meals.ts`), and the app knows nothing about somewhere you just heard
 about.
 
+## A day is called "Day 3", not "Batam Centre"
+
+Every day has an area name — Arrival, Crosstown, Batam Centre, Northern loop,
+Departure — and the app used to lead with it: the filter chips read "Crosstown", the
+day screen's headline was "Northern loop". That asks you to keep a second index in your
+head, mapping five area names onto five day numbers, in order to answer "which day is
+that?".
+
+So the order is now day first, area second, everywhere a day is named: the filter chips
+(two lines, "Day 3" over "Batam Centre"), the day screens, the days list, the place
+sheets, the day-complete card. Nothing was removed — the area still tells you what a day
+*is*, which is the second question. It is just no longer the handle you have to navigate
+by. `Day.name` in `data/trip.ts` carries a note saying so, because the next person to
+render a day will otherwise reach for it as the label.
+
+The Today screen gained a subtitle from the same change. Its headline is the current
+meal, so the day had nowhere to appear at all; it now reads "Day 3 · Batam Centre"
+underneath.
+
 ## Notes on the data
 
 Some places sit **inside** a mall and get no map pin of their own — Chikuro, Top 100,

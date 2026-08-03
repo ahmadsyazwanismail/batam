@@ -68,7 +68,7 @@ export function DaysScreen(): JSX.Element {
                     className="eyebrow"
                     style={isToday ? { color: 'var(--accent)' } : undefined}
                   >
-                    Day {day.id} · {formatTripDate(day.date)}
+                    {formatTripDate(day.date)}
                     {isToday ? ' · today' : ''}
                   </span>
                   {isPast && (
@@ -78,8 +78,12 @@ export function DaysScreen(): JSX.Element {
                   )}
                 </div>
 
-                <p className="signboard mt-1 text-title leading-none">{day.name}</p>
-                <p className="mt-1.5 text-caption text-muted">Based at {base.name}</p>
+                <p className="signboard mt-1 text-title leading-none">Day {day.id}</p>
+                {/* The area and the base together: both answer "where is this
+                    day", which is the second question after "which day". */}
+                <p className="mt-1.5 text-caption text-muted">
+                  {day.name} · based at {base.name}
+                </p>
 
                 <div className="mt-3 flex gap-1" aria-hidden>
                   {courses.map((c) => (

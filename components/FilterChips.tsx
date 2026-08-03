@@ -45,7 +45,11 @@ export function FilterChips({
               type="button"
               onClick={() => onToggleLine(line.id)}
               aria-pressed={on}
-              className="tap flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-caption font-semibold transition-colors"
+              // The visible text is "Day 3" over "Batam Centre"; both are in
+              // the accessible name, in that order, so what is read matches
+              // what is seen (WCAG 2.5.3).
+              aria-label={`Day ${line.id}, ${line.name}`}
+              className="tap flex shrink-0 items-center gap-2 rounded-full border py-1.5 pl-2.5 pr-3.5 text-left transition-colors"
               style={
                 on
                   ? {
@@ -58,10 +62,21 @@ export function FilterChips({
             >
               <span
                 aria-hidden
-                className="h-2.5 w-2.5 rounded-full"
+                className="h-2.5 w-2.5 shrink-0 rounded-full"
                 style={{ backgroundColor: on ? ON_SELECTED : line.colour }}
               />
-              {line.name}
+              {/* Day first, area second. The chips used to read "Arrival",
+                  "Crosstown", "Northern loop" — names for what a day *is*,
+                  which is the wrong handle for finding it. You know you are on
+                  day three; you do not necessarily remember that day three is
+                  Batam Centre. Both are still here, in the order you think in.
+                  Two lines rather than "Day 3 · Batam Centre" on one, because
+                  five of those on one line is a lot of sideways scrolling for
+                  a row that has to stay under your thumb. */}
+              <span className="flex flex-col leading-tight">
+                <span className="text-caption font-semibold">Day {line.id}</span>
+                <span className="text-eyebrow font-medium tracking-normal">{line.name}</span>
+              </span>
             </button>
           );
         })}
